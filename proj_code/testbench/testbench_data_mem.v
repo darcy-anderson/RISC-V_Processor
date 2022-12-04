@@ -21,18 +21,25 @@ for comparison.
 module testbench_data_mem();
 
   reg t_clk = 0;
-  reg [3:0] t_mem_en;
+  reg t_mem_en;
+  reg t_mem_we;
+  reg t_mem_se;
+  reg [3:0] t_mem_bs;
   reg [31:0] t_addr;
   reg [31:0] t_data_in;
   wire [31:0] t_data_out;
   integer fp, r;
-  reg [3:0] f_mem_en;
+  reg f_mem_se;
+  reg [3:0] f_mem_bs;
   reg [31:0] f_addr;
   reg [31:0] f_data;
 
   data_mem dut(
     .clk(t_clk),
     .mem_en(t_mem_en),
+    .mem_we(t_mem_we),
+    .mem_se(t_mem_se),
+    .mem_bs(t_mem_bs),
     .addr(t_addr),
     .data_in(t_data_in),
     .data_out(t_data_out)
@@ -41,7 +48,27 @@ module testbench_data_mem();
   always #5 t_clk = ~t_clk;
 
   initial begin
-    // Test saves
+    
+    // Test mem_en
+    t_mem_en = 0;
+    t_mem_we = 1;
+    t_mem_se = 0;
+    t_mem_bs = 2'b11;
+    t_data_in = 32'b10101010101010101010101010101010;
+    t_addr = 32'h80000000;
+    wait (t_clk == 1);
+    wait (t_clk == 0);
+    t_mem_we = 0;
+		wait (t_clk == 1);
+    wait (t_clk == 0);
+    if (t_data_out == t_data_in) begin
+    	$display("Test failed. Output is not correct at time %t.", $time);
+      $stop;
+    end
+    
+    t_mem_en = 1;
+    
+    // Test stores
     fp = $fopen("tc_data_mem_save.csv", "r");
     if (fp == 0) begin
         $display("Error opening file.");
@@ -49,33 +76,34 @@ module testbench_data_mem();
     end
 
     while (!$feof(fp)) begin
-      r = $fscanf(fp, "%h,%h,%h", f_mem_en, f_addr, f_data);
+      r = $fscanf(fp, "%h,%h,%h", f_mem_bs, f_addr, f_data);
 
-      t_mem_en = f_mem_en;
+			t_mem_we = 1;
+      t_mem_bs = f_mem_bs;
       t_addr = f_addr;
       t_data_in = f_data;
       wait (t_clk == 1);
       wait (t_clk == 0);
-      t_mem_en = 4'b1011;
+      t_mem_we = 0;
       wait (t_clk == 1);
       wait (t_clk == 0);
 
-      // Save word
-      if (t_mem_en[2:0] == 3'b111) begin
+      // Store word
+      if (t_mem_bs == 2'b11) begin
         if (t_data_out != f_data) begin
           $display("Test failed. Output is not correct at time %t.", $time);
           $stop;
         end
       end
-      // Save half-word
-      else if (t_mem_en[2:0] == 3'b110) begin
+      // Store half-word
+      else if (t_mem_bs == 2'b10) begin
         if (t_data_out[15:0] != f_data[15:0]) begin
           $display("Test failed. Output is not correct at time %t.", $time);
           $stop;
         end
       end
-      // Save byte
-      else if (t_mem_en[2:0] == 3'b101) begin
+      // Store byte
+      else if (t_mem_bs == 2'b01) begin
         if (t_data_out[7:0] != f_data[7:0]) begin
           $display("Test failed. Output is not correct at time %t.", $time);
           $stop;
@@ -93,59 +121,26 @@ module testbench_data_mem();
     end
 
     while (!$feof(fp)) begin
-      r = $fscanf(fp, "%h,%h,%h", f_mem_en, f_addr, f_data);
+      r = $fscanf(fp, "%h,%h,%h,%h", f_mem_bs, f_mem_se, f_addr, f_data);
 
-      t_mem_en = f_mem_en;
+			t_mem_we = 1;
+      t_mem_bs = f_mem_bs;
+      t_mem_se = f_mem_se;
       t_addr = f_addr;
       t_data_in = f_data;
       wait (t_clk == 1);
       wait (t_clk == 0);
+      t_mem_we = 0;
+      wait (t_clk == 1);
+      wait (t_clk == 0);
 
-      // Load half-word unsigned
-      if (t_mem_en == 4'b0110) begin
-        t_mem_en = 4'b0010;
-        wait (t_clk == 1);
-        wait (t_clk == 0);
-        if (t_data_out != f_data) begin
-          $display("Test failed. Output is not correct at time %t.", $time);
-          $stop;
-        end
-      end
-      // Load half-word signed
-      if (t_mem_en == 4'b1110) begin
-        t_mem_en = 4'b1010;
-        wait (t_clk == 1);
-        wait (t_clk == 0);
-        if (t_data_out != f_data) begin
-          $display("Test failed. Output is not correct at time %t.", $time);
-          $stop;
-        end
-      end
-      // Load byte unsigned
-      if (t_mem_en == 4'b0101) begin
-        t_mem_en = 4'b0001;
-        wait (t_clk == 1);
-        wait (t_clk == 0);
-        if (t_data_out != f_data) begin
-          $display("Test failed. Output is not correct at time %t.", $time);
-          $stop;
-        end
-      end
-      // Load byte signed
-      if (t_mem_en == 4'b1101) begin
-        t_mem_en = 4'b1001;
-        wait (t_clk == 1);
-        wait (t_clk == 0);
-        if (t_data_out != f_data) begin
-          $display("Test failed. Output is not correct at time %t.", $time);
-          $stop;
-        end
-      end
-    
+			if (t_data_out != f_data) begin
+				$display("Test failed. Output is not correct at time %t.", $time);
+				$stop;
+			end   
     end
 
     $fclose(fp);  
-
 
     $display("All tests passed. Testbench concluded.");
     $stop;

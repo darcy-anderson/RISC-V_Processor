@@ -1,164 +1,88 @@
+// TODO: Implement read/write for identity and I/O registers. Update constraints
+// file to reflect I/O registers.
+
 `timescale 1ns / 1ps
 
 module data_mem(
   input clk, // Clock
-  input [3:0] mem_en, // Memory control signal
+  input mem_en, // Overall data memory enable
+  input mem_we, // Data memory write enable
+  input mem_se, // Load data sign extension enable
+  input [1:0] mem_bs, // Data memory byte select
   input [31:0] addr, // Data address selector
   input [31:0] data_in, // Data input bus
   output [31:0] data_out // Data output bus
 );
 
-  // 4 single-byte wide interweaved memory sets
-  reg [7:0] ramblock0 [1023:0];
-  reg [7:0] ramblock1 [1023:0];
-  reg [7:0] ramblock2 [1023:0];
-  reg [7:0] ramblock3 [1023:0];
+  reg [31:0] ram [1023:0];
+  reg [31:0] reg_id [2:0]; // Identity registers
+  reg [31:0] reg_sw, reg_led; // I/O registers
+  reg [31:0] data_load; // Output data register
+  wire [3:0] en; // Enable per_block
+  wire [31:0] data_store;
+  wire [1:0] byte_addr;
+  wire [29:0] word_addr;
 
-  reg [31:0] data_read;
-  reg [31:0] addr_incr; // Required for accessing next row for misaligned addresses
+  initial begin
+    // Set identity registers with N numbers
+    reg_id[0] = 32'b110110011010110000001000; // D'Arcy
+    reg_id[1] = 32'b101010011110001001111110; // Irving
+    reg_id[2] = 32'b101111101100101010010111; // Jayeon
+    // Initialize LEDs to off
+    reg_led = 32'b0;
+  end
 
+  assign byte_addr = addr[1:0];
+  assign word_addr = addr[11:2];
+
+  // Determine which bytes should be stored/loaded based on byte-select signal
+  // and memory address
+  assign en = (mem_bs == 2'b11) ? 4'b1111 :
+              (mem_bs == 2'b10 && byte_addr == 2'b10) ? 4'b1100 :
+              (mem_bs == 2'b10 && byte_addr == 2'b00) ? 4'b0011 :
+              (mem_bs == 2'b01 && byte_addr == 2'b11) ? 4'b1000 :
+              (mem_bs == 2'b01 && byte_addr == 2'b10) ? 4'b0100 :
+              (mem_bs == 2'b01 && byte_addr == 2'b01) ? 4'b0010 :
+              (mem_bs == 2'b01 && byte_addr == 2'b00) ? 4'b0001 :
+              4'bx;
+  assign data_store = (en == 4'b1111) ? data_in :
+                      (en == 4'b1100) ? {data_in[15:0], 16'bx} :
+                      (en == 4'b0011) ? {16'bx, data_in[15:0]} :
+                      (en == 4'b1000) ? {data_in[7:0], 24'bx} :
+                      (en == 4'b0100) ? {8'bx, data_in[7:0], 16'bx} :
+                      (en == 4'b0010) ? {16'bx, data_in[7:0], 8'bx} :
+                      (en == 4'b0001) ? {24'bx, data_in[7:0]} :
+                      32'bx;
+
+  // Synchronously read/write memory
   always @(posedge clk) begin
 
-    addr_incr = addr + 1;
+    if (mem_en) begin
 
-    // Save word
-    if (mem_en[2:0] == 3'b111) begin
-      case (addr[1:0])
-        2'b00: begin
-          ramblock0[addr[11:2]] <= data_in[7:0];
-          ramblock1[addr[11:2]] <= data_in[15:8];
-          ramblock2[addr[11:2]] <= data_in[23:16];
-          ramblock3[addr[11:2]] <= data_in[31:24];
-        end
-        2'b01: begin
-          ramblock1[addr[11:2]] <= data_in[7:0];
-          ramblock2[addr[11:2]] <= data_in[15:8];
-          ramblock3[addr[11:2]] <= data_in[23:16];
-          ramblock0[addr_incr[11:2]] <= data_in[31:24];
-        end
-        2'b10: begin
-          ramblock2[addr[11:2]] <= data_in[7:0];
-          ramblock3[addr[11:2]] <= data_in[15:8];
-          ramblock0[addr_incr[11:2]] <= data_in[23:16];
-          ramblock1[addr_incr[11:2]] <= data_in[31:24];
-        end
-        2'b11: begin
-          ramblock3[addr[11:2]] <= data_in[7:0];
-          ramblock0[addr_incr[11:2]] <= data_in[15:8];
-          ramblock1[addr_incr[11:2]] <= data_in[23:16];
-          ramblock2[addr_incr[11:2]] <= data_in[31:24];
-        end
-      endcase
-    end
+      if (mem_we && en[3]) ram[word_addr][31:24] <= data_store[31:24];
+      if (mem_we && en[2]) ram[word_addr][23:16] <= data_store[23:16];
+      if (mem_we && en[1]) ram[word_addr][15:8] <= data_store[15:8];
+      if (mem_we && en[0]) ram[word_addr][7:0] <= data_store[7:0];
 
-    // Save half-word
-    else if (mem_en[2:0] == 3'b110) begin
-      case (addr[1:0])
-        2'b00: begin
-          ramblock0[addr[11:2]] <= data_in[7:0];
-          ramblock1[addr[11:2]] <= data_in[15:8];
-        end
-        2'b01: begin
-          ramblock1[addr[11:2]] <= data_in[7:0];
-          ramblock2[addr[11:2]] <= data_in[15:8];
-        end
-        2'b10: begin
-          ramblock2[addr[11:2]] <= data_in[7:0];
-          ramblock3[addr[11:2]] <= data_in[15:8];
-        end
-        2'b11: begin
-          ramblock3[addr[11:2]] <= data_in[7:0];
-          ramblock0[addr_incr[11:2]] <= data_in[15:8];
-        end
-      endcase
-    end
-
-    // Save byte
-    else if (mem_en[2:0] == 3'b101) begin
-      case (addr[1:0])
-        2'b00: ramblock0[addr[11:2]] <= data_in[7:0];
-        2'b01: ramblock1[addr[11:2]] <= data_in[7:0];
-        2'b10: ramblock2[addr[11:2]] <= data_in[7:0];
-        2'b11: ramblock3[addr[11:2]] <= data_in[7:0];
-      endcase
-    end
-    
-    // Read word
-    else if (mem_en[2:0] == 3'b011) begin
-    	case (addr[1:0])
-        2'b00: begin
-          data_read[7:0] <= ramblock0[addr[11:2]];
-          data_read[15:8] <= ramblock1[addr[11:2]];
-          data_read[23:16] <= ramblock2[addr[11:2]];
-          data_read[31:24] <= ramblock3[addr[11:2]];
-        end
-        2'b01: begin
-          data_read[7:0] <= ramblock1[addr[11:2]];
-          data_read[15:8] <= ramblock2[addr[11:2]];
-          data_read[23:16] <= ramblock3[addr[11:2]];
-          data_read[31:24] <= ramblock0[addr_incr[11:2]];
-        end
-        2'b10: begin
-          data_read[7:0] <= ramblock2[addr[11:2]];
-          data_read[15:8] <= ramblock3[addr[11:2]];
-          data_read[23:16] <= ramblock0[addr_incr[11:2]];
-          data_read[31:24] <= ramblock1[addr_incr[11:2]];
-        end
-        2'b11: begin
-          data_read[7:0] <= ramblock3[addr[11:2]];
-          data_read[15:8] <= ramblock0[addr_incr[11:2]];
-          data_read[23:16] <= ramblock1[addr_incr[11:2]];
-          data_read[31:24] <= ramblock2[addr_incr[11:2]];
-        end
-      endcase
-  	end
-
-    // Read half-word
-    else if (mem_en[2:0] == 3'b010) begin
-      case (addr[1:0])
-        2'b00: begin
-          data_read[7:0] = ramblock0[addr[11:2]];
-          data_read[15:8] = ramblock1[addr[11:2]];
-        end
-        2'b01: begin
-          data_read[7:0] = ramblock1[addr[11:2]];
-          data_read[15:8] = ramblock2[addr[11:2]];
-        end
-        2'b10: begin
-          data_read[7:0] = ramblock2[addr[11:2]];
-          data_read[15:8] = ramblock3[addr[11:2]];
-        end
-        2'b11: begin
-          data_read[7:0] = ramblock3[addr[11:2]];
-          data_read[15:8] = ramblock0[addr_incr[11:2]];
-        end
-      endcase
-      // Pad values
-      if (!mem_en[3]) data_read[31:16] = 16'b0000000000000000; // Unsigned
-      else begin // Sign extension 
-        if (data_read[15]) data_read[31:16] = 16'b1111111111111111;
-        else data_read[31:16] = 16'b0000000000000000;
-      end
-    end
-
-    // Read byte
-    else if (mem_en[2:0] == 3'b001) begin
-      case (addr[1:0])
-        2'b00: data_read[7:0] = ramblock0[addr[11:2]];
-        2'b01: data_read[7:0] = ramblock1[addr[11:2]];
-        2'b10: data_read[7:0] = ramblock2[addr[11:2]];
-        2'b11: data_read[7:0] = ramblock3[addr[11:2]];
-      endcase
-      // Pad values
-      if (!mem_en[3]) data_read[31:8] = 24'b000000000000000000000000; // Unsigned
-      else begin // Sign extension
-        if (data_read[7]) data_read[31:8] = 24'b111111111111111111111111;
-        else data_read[31:8] = 24'b000000000000000000000000;
-      end
+      data_load <= ram[word_addr];
     end
   end
 
-  assign data_out = data_read;
+  // Sign/zero extension for loads
+  assign data_out = (en == 4'b1111) ? data_load :
+                    (mem_se && en == 4'b1100) ? {{16{data_load[31]}}, data_load[31:16]} :
+                    (mem_se && en == 4'b0011) ? {{16{data_load[15]}}, data_load[15:0]} :
+                    (mem_se && en == 4'b1000) ? {{24{data_load[31]}}, data_load[31:24]} :
+                    (mem_se && en == 4'b0100) ? {{24{data_load[23]}}, data_load[23:16]} :
+                    (mem_se && en == 4'b0010) ? {{24{data_load[15]}}, data_load[15:8]} :
+                    (mem_se && en == 4'b0001) ? {{24{data_load[7]}}, data_load[7:0]} :
+                    (!mem_se && en == 4'b1100) ? {16'b0, data_load[31:16]} :
+                    (!mem_se && en == 4'b0011) ? {16'b0, data_load[15:0]} :
+                    (!mem_se && en == 4'b1000) ? {24'b0, data_load[31:24]} :
+                    (!mem_se && en == 4'b0100) ? {24'b0, data_load[23:16]} :
+                    (!mem_se && en == 4'b0010) ? {24'b0, data_load[15:8]} :
+                    (!mem_se && en == 4'b0001) ? {24'b0, data_load[7:0]} :
+                    32'bx;                                   
 
 endmodule
 
