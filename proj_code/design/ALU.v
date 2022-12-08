@@ -7,36 +7,34 @@
 module ALU(
     input wire [31:0] operand1,
     input wire [31:0] operand2,                
-    input wire [6:0] funct7,
-    input wire [2:0] funct3,   
+    input wire [3:0] opcode,
     output wire [31:0] out
     );
     
 reg [31:0] result;
-wire [9:0] funct;
-assign funct = {funct7, funct3};
+
 
 always @(*) begin // I don't really want to use always, but it seesm like if I want to use case I have to
-    case (funct)
-        10'b0000000000: //ADD
+    case (opcode)
+        `EXE_ADD_OP: //ADD
             result <= operand1 + operand2;
-        10'b0100000000: //SUB
+        `EXE_SUB_OP: //SUB
             result <= operand1 - operand2;
-        10'b0000000001: //SLL
+        `EXE_SLL_OP: //SLL
             result <= operand1 << operand2[4:0];
-        10'b0000000010: //SLT
+        `EXE_SLT_OP: //SLT
             result <= ($signed(operand1) < $signed(operand2)) ? 1 : 0;
-        10'b0000000011: //SLTU
+        `EXE_SLTU_OP: //SLTU
             result <= (operand1 < operand2) ? 1 : 0;
-        10'b0000000100: //XOR
+        `EXE_XOR_OP: //XOR
             result <= operand1 ^ operand2;
-        10'b0000000101: //SRL
+        `EXE_SRL_OP: //SRL
             result <= operand1 >> operand2[4:0];
-        10'b0100000101: //SRA
+        `EXE_SRA_OP: //SRA
             result <= $signed(operand1) >>> operand2[4:0];
-        10'b0000000110: //OR
+        `EXE_OR_OP: //OR
             result <= operand1 | operand2;
-        10'b0000000111: //AND
+        `EXE_AND_OP: //AND
             result <= operand1 & operand2;
         default:    
             result <= result;
