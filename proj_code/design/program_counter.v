@@ -17,7 +17,7 @@ begin
     if (en == 1) 
         i_out <= c_in;
     else if (rst == 1)
-        i_out <= 32'h01000000;
+        i_out <= 32'h00000000;
 end
 
 assign c_out = i_out;
