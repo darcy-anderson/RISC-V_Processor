@@ -5,7 +5,7 @@
 
 
 
-module BC(
+module BranchCompare(
     input wire [31:0] rs1,
     input wire [31:0] rs2,
     input wire [3:0] opcode,

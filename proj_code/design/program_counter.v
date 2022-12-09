@@ -14,10 +14,10 @@ reg [31:0] i_out;
 
 always @(posedge clk)
 begin
-    if (en == 1) 
+    if (en) 
         i_out <= c_in;
-    else if (rst == 1)
-        i_out <= 32'h00000000;
+    else if (rst)
+        i_out <= 32'h01000000;
 end
 
 assign c_out = i_out;

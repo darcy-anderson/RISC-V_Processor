@@ -27,16 +27,16 @@ module cpu(
     
 // >> State Machine <<
 localparam [2:0]
-    halt = 3'b000,
-    idle = 3'b001,
-    fetch = 3'b010,
-    decode = 3'b011,
-    execute = 3'b100,
-    memory = 3'b101,
-    write = 3'b110;
+    halt    = 3'b111,
+    idle    = 3'b000,
+    fetch   = 3'b001,
+    decode  = 3'b010,
+    execute = 3'b011,
+    memory  = 3'b100,
+    write   = 3'b101;
 reg[2:0] state_curr, state_next;
 
-always @ (clk, rst)
+always @ (negedge clk, posedge rst)
 begin
     if (rst)
         state_curr <= halt;
@@ -85,7 +85,6 @@ wire [31:0] exe_alu_s2_data;
 wire [31:0] exe_rd_output_data;
 wire [31:0] exe_imm_extended;
 
-wire        cs_exe_reg_write_data_sel;
 wire        cs_exe_reg_write_en;
 wire [3:0]  cs_exe_data_op;
 wire [2:0]  cs_exe_branch_op;
@@ -127,17 +126,13 @@ program_counter pc (.clk(clk),
                     .en(cs_if_en),
                     .c_in(pc_next_inst),
                     .c_out(pc_curr));
-                    
-program_counter_mux pcm (.clk(clk),
-                         .jump_en(cs_jump_en),
-                         .pc_increment(pc_curr_increment),
-                         .pc_jump_target(pc_jump),
-                         .pc_next(pc_next_inst));
 
 assign pc_curr_increment = pc_curr + 3'b100; // best place here?
+assign pc_next_inst = cs_jump_en? pc_jump : pc_curr_increment;
 
 // -- INSTRUCTION DECODE --     
 instr_mem im(.clk(clk),
+             .imem_en(cs_id_en),
              .pc_addr(pc_curr), 
              .instr_out(id_instr));
 
@@ -151,11 +146,15 @@ control c (.clk(clk),
            .aluS1Sel(cs_exe_r1_sel),
            .aluS2Sel(cs_exe_r2_sel),
            .aluOp(cs_exe_data_op),
-           .memControl(cs_mem_en),
-           .regWriteEn(cs_wb_en),
+//           .memControl(cs_mem_control), -> should be divided to multiple parts?
+           .regWriteEn(cs_exe_reg_write_en),
            .regWriteBackDataSel(cs_wb_data_sel),
            .linkRegWriteEn(cs_wb_pc_addr));
-           
+
+assign exe_rd = id_instr[11:7];
+assign exe_r1 = id_instr[19:15];
+assign exe_r2 = id_instr[24:20];          
+
 // -- EXECUTE --
 register_file rf(.clk(clk),
                  .rd(exe_rd),
@@ -172,17 +171,18 @@ ALU alu(.operand1(exe_alu_s1_data),
         .opcode(cs_exe_data_op),
         .out(exe_rd_output_data));             
      
-branchALU balu(.s1(exe_r1_data),
-               .s2(exe_r2_data),
-               .opcode(cs_exe_branch_op),
-               .branchResult(cs_exe_branch_result));     
-               
+BranchCompare bc(.rs1(exe_r1_data),
+                 .rs2(exe_r2_data),
+                 .opcode(cs_exe_branch_op),
+                 .out(cs_exe_branch_result));     
+
 imm_ext ie(.imm_ext_en(cs_exe_imm_op),
            .imm_in(cs_exe_imm_data),
            .imm_out(exe_imm_extended));
 
 assign exe_alu_s1_data = (cs_exe_r1_sel)? exe_r1_data : pc_curr;
 assign exe_alu_s2_data = (cs_exe_r2_sel)? exe_imm_extended : exe_r2_data;
+assign exe_write_data = cs_wb_pc_addr? pc_curr_increment: cs_wb_data_sel? mem_data_out: exe_rd_output_data; // currently not taking cs_wb_data_sel and cs_wb_pc_addr into account
 
 // -- MEMORY --
 data_mem dm(.clk(clk),

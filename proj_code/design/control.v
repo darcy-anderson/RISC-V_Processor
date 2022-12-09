@@ -145,6 +145,7 @@ module control(
         `OP_ALU: begin
         case(funct3)
                 `FUNCT3_ADD_SUB : begin // sub == add negative value
+                $display ("add sub instruction");
                     case(funct7)
                         `FUNCT7_ADD: aluOp = `EXE_ADD_OP;
                         `FUNCT7_SUB: aluOp = `EXE_SUB_OP;
@@ -178,9 +179,11 @@ module control(
             regWriteEn = 1'b1;
             memControl = 3'b000;
             regWriteBackDataSel = 1'b0;
+            linkRegWriteEn = 1'b0;
             aluS1Sel = 1'b1;
             aluS2Sel = 1'b0;
             branchEn = 1'b0;      
+
         end        
 //        `OP_ALU_IMM: begin
 //        case(funct3)
@@ -219,10 +222,35 @@ module control(
 //            aluS2Sel = 1'b1;
 //            branchEn = 1'b0;     
 //        end
-        default: $display("incorrect opcode");
+        default: begin
+//            $display("incorrect opcode");
+            branchEn = 1'b0;
+            
+//                output reg branchEn, // 0 for PC+4, 1 for new val; to be sent to PC mux to determine jump
+//    output reg [1:0] immExtCtrl,
+//    output reg [19:0] imm_data,
+//    output reg [2:0] branchCompareOp,
+//    output reg aluS1Sel, // 0 for pc to be used during jump immediates, 1 for reg1
+//    output reg aluS2Sel, // 0 for reg data, 1 for imm
+//    output reg [3:0] aluOp, // usually generated from 
+//    output reg [3:0] memControl, // TODO: modify to 2 bits for word/half/byte access
+//    output reg regWriteEn,
+//    output reg regWriteBackDataSel, // 0 for ALU result, 1 for mem data
+//    output reg linkRegWriteEn
+            end
     endcase
     
     end
 endmodule
 
 
+//
+//restart
+//add_force {/cpu/clk} -radix hex {1 0ns} {0 50000ps} -repeat_every 100000ps
+//run 100 ns
+//add_force {/cpu/rst} -radix hex {0 0ns}
+//run 100 ns
+//add_force {/cpu/rst} -radix hex {1 0ns}
+//run 200 ns
+//add_force {/cpu/rst} -radix hex {0 0ns}
+//run 200 ns
