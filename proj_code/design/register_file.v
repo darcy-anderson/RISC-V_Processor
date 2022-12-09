@@ -24,9 +24,9 @@ registers[1] <= 32'b0;
 registers[2] <= 32'b0;
 registers[3] <= 32'b0;
 registers[4] <= 32'b0;
-registers[5] <= 32'b0;
+registers[5] <= 32'b1;
 registers[6] <= 32'b0;
-registers[7] <= 32'b0;
+registers[7] <= 32'b10;
 registers[8] <= 32'b0;
 registers[9] <= 32'b0;
 registers[10] <= 32'b0;
@@ -58,6 +58,7 @@ always @(posedge clk) begin
     if (w_en == 1) begin
         if (rd != 0)
             registers[rd] <= write_data;
+        $display("writing to register %h value %h", rd, write_data); 
     end
     if (r_en == 1) begin
         if (r1 != 0)

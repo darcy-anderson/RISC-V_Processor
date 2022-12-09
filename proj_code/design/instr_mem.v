@@ -1,10 +1,10 @@
 `timescale 1ns / 1ps
 
 module instr_mem(
-	input clk, // Clock
-  input imem_en, // Instruction memory read enable
-  input [31:0] pc_addr, // Input address from program counter
-  output [31:0] instr_out // Instruction output bus
+  input wire clk, // Clock
+  input wire imem_en, // Instruction memory read enable
+  input wire [31:0] pc_addr, // Input address from program counter
+  output wire [31:0] instr_out // Instruction output bus
 );
 
   reg [31:0] instr_rom [511:0];
@@ -12,7 +12,7 @@ module instr_mem(
 
   initial $readmemh("main.mem", instr_rom);
 
-	always @(posedge clk) begin
+  always @(posedge clk) begin
     if (imem_en) instr_read = instr_rom[pc_addr[12:2]];
   end
 

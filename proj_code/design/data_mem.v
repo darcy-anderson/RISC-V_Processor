@@ -4,14 +4,14 @@
 `timescale 1ns / 1ps
 
 module data_mem(
-  input clk, // Clock
-  input mem_en, // Overall data memory enable
-  input mem_we, // Data memory write enable
-  input mem_se, // Load data sign extension enable
-  input [1:0] mem_bs, // Data memory byte select
-  input [31:0] addr, // Data address selector
-  input [31:0] data_in, // Data input bus
-  output [31:0] data_out // Data output bus
+  input wire clk, // Clock
+  input wire mem_en, // Overall data memory enable
+  input wire mem_we, // Data memory write enable
+  input wire mem_se, // Load data sign extension enable
+  input wire [1:0] mem_bs, // Data memory byte select
+  input wire [31:0] addr, // Data address selector
+  input wire [31:0] data_in, // Data input bus
+  output wire [31:0] data_out // Data output bus
 );
 
   reg [31:0] ram [1023:0];

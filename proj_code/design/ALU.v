@@ -14,7 +14,6 @@ module ALU(
     
 reg [31:0] result;
 
-
 always @(*) begin // I don't really want to use always, but it seesm like if I want to use case I have to
     case (opcode)
         `EXE_ADD_OP: //ADD

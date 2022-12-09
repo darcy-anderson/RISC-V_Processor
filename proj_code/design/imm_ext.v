@@ -1,9 +1,9 @@
 `timescale 1ns / 1ps
 
 module imm_ext(
-  input [1:0] imm_ext_en, // Control signal
-  input [19:0] imm_in, // Non extended input value
-  output [31:0] imm_out // Extended output value
+  input wire [1:0] imm_ext_en, // Control signal
+  input wire [19:0] imm_in, // Non extended input value
+  output wire [31:0] imm_out // Extended output value
 );
 
   assign imm_out = (imm_ext_en == 2'b00) ? {{20{imm_in[11]}}, imm_in[11:0]} : // Signed 12-bit
