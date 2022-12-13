@@ -26,14 +26,17 @@ module top(
 
 reg clk, reset;
 
-initial
-begin
-    clk = 0;
-    reset = 1;
+cpu processor(.clk(clk), .rst(reset));
+
+initial begin 
+clk=0;
+forever #10 clk=~clk;
 end
 
-always #10 clk = ~ clk;
-
-cpu processor(.clk(clk), .rst(reset));
+initial begin
+reset=1;
+#200;
+reset=0;
+end
 
 endmodule

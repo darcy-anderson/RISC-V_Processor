@@ -1,23 +1,5 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 11/28/2022 05:48:09 PM
-// Design Name: 
-// Module Name: cpu
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
 
 module cpu(
@@ -89,7 +71,7 @@ wire        cs_exe_reg_write_en;
 wire [3:0]  cs_exe_data_op;
 wire [2:0]  cs_exe_branch_op;
 wire        cs_exe_branch_result;
-wire [2:0]  cs_exe_imm_op;
+wire [1:0]  cs_exe_imm_op; // I made a change here. Now it's 2 bit instead of the original 3
 wire [19:0] cs_exe_imm_data;
 
 wire cs_exe_r1_sel;

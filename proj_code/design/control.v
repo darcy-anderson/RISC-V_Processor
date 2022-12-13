@@ -143,9 +143,9 @@ module control(
 //            branchEn = 1'b0;     
 //        end        
         `OP_ALU: begin
-        case(funct3)
+            case(funct3)
                 `FUNCT3_ADD_SUB : begin // sub == add negative value
-                $display ("add sub instruction");
+                $display ("add/sub instruction");
                     case(funct7)
                         `FUNCT7_ADD: aluOp = `EXE_ADD_OP;
                         `FUNCT7_SUB: aluOp = `EXE_SUB_OP;
@@ -185,43 +185,55 @@ module control(
             branchEn = 1'b0;      
 
         end        
-//        `OP_ALU_IMM: begin
-//        case(funct3)
-//                `FUNCT3_ADDI : begin // sub == add negative value
-//                    aluOp = `EXE_SLL_OP;
-//                end
-//                `FUNCT3_SLLI : begin
-//                    aluOp = `EXE_SLL_OP;
-//                end
-//                `FUNCT3_SLTI : begin
-//                    aluOp = `EXE_SLT_OP;
-//                end
-//                `FUNCT3_SLTIU : begin
-//                    aluOp = `EXE_SLTU_OP;
-//                end 
-//                `FUNCT3_XORI : begin
-//                    aluOp = `EXE_XOR_OP;
-//                end
-//                `FUNCT3_SRL_SRA : begin
-//                    case(funct7)
-//                        `FUNCT7_SRL: aluOp = `EXE_SRL_OP;
-//                        `FUNCT7_SRA: aluOp = `EXE_SRA_OP;
-//                    endcase
-//                end 
-//                `FUNCT3_ORI : begin
-//                    aluOp = `EXE_OR_OP;
-//                end
-//                `FUNCT3_ANDI : begin
-//                    aluOp = `EXE_AND_OP;
-//                end
-//            endcase
-//            regWriteEn = 1'b1;
-//            memRead = 1'b0;
-//            memWrite = 1'b0;
-//            regWriteBackDataSel = 1'b0;
-//            aluS2Sel = 1'b1;
-//            branchEn = 1'b0;     
-//        end
+        `OP_ALU_IMM: begin
+            case(funct3)
+                `FUNCT3_ADDI : begin // sub == add negative value
+                    aluOp = `EXE_ADD_OP;
+                    immExtCtrl = 2'b01;
+                    $display ("addi instruction");
+                end
+                `FUNCT3_SLTI : begin
+                    aluOp = `EXE_SLT_OP;
+                    immExtCtrl = 2'b01;
+                end
+                `FUNCT3_SLTIU : begin
+                    aluOp = `EXE_SLTU_OP;
+                    immExtCtrl = 2'b10;
+                end 
+                `FUNCT3_XORI : begin
+                    aluOp = `EXE_XOR_OP;
+                    immExtCtrl = 2'b01;
+                end
+                `FUNCT3_ORI : begin
+                    aluOp = `EXE_OR_OP;
+                    immExtCtrl = 2'b01;
+                end
+                `FUNCT3_ANDI : begin
+                    aluOp = `EXE_AND_OP;
+                    immExtCtrl = 2'b01;
+                end
+                `FUNCT3_SLLI : begin
+                    aluOp = `EXE_SLL_OP;
+                    immExtCtrl = 2'b10;
+                end
+                `FUNCT3_SRL_SRA : begin
+                    case(funct7)
+                        `FUNCT7_SRL: aluOp = `EXE_SRL_OP;
+                        `FUNCT7_SRA: aluOp = `EXE_SRA_OP;
+                    endcase
+                    immExtCtrl = 2'b10;
+                end 
+            endcase
+            branchEn = 1'b0; 
+            imm_data = inst[31:20];
+            regWriteEn = 1'b1;
+            memControl = 3'b000;
+            regWriteBackDataSel = 1'b0;
+            linkRegWriteEn = 1'b0;
+            aluS1Sel = 1'b1;
+            aluS2Sel = 1'b1;
+                
+        end
         default: begin
 //            $display("incorrect opcode");
             branchEn = 1'b0;
