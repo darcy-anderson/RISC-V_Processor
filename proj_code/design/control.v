@@ -52,15 +52,17 @@ module control(
 //            aluOp = `EXE_ADD_OP;
 //            branchEn = 1'b1; // change pc     
 //        end
-//        `OP_JAL: begin
-//            regWriteEn = 1'b0;
-//            memRead = 1'b0;
-//            memWrite = 1'b0;
-//            regWriteBackDataSel = 1'b0;
-//            aluS2Sel = 1'b0;
-//            aluOp = `EXE_JAL_OP;
-//            branchEn = 1'b1; // change pc     
-//        end
+        `OP_JAL: begin
+            branchEn = 1'b1; // do arithmetic on pc  
+            immExtCtrl = 2'b01; // unsigned 20-bit imm extension
+            regWriteEn = 1'b1; // write to rd
+            memRead = 1'b0;
+            memWrite = 1'b0;
+            regWriteBackDataSel = 1'b0;
+            aluS1Sel = 1'b1; // select PC
+            aluS2Sel = 1'b0;
+            aluOp = `EXE_ADD_OP;
+          end
 //        `OP_JALR: begin
 //            regWriteEn = 1'b0;
 //            memRead = 1'b0;
