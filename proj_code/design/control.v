@@ -15,8 +15,7 @@ module control(
     input wire [31:0] inst,
     input wire branchValid, // for branch equals operations
     output reg branchEn, // 0 for PC+4, 1 for new val; to be sent to PC mux to determine jump
-    output reg [1:0] immExtCtrl,
-    output reg [19:0] imm_data,
+    output reg [2:0] immExtCtrl, // 000-I, 001-S, 010-B, 011-U, 100-J
     output reg [2:0] branchCompareOp,
     output reg aluS1Sel, // 0 for pc to be used during jump immediates, 1 for reg1
     output reg aluS2Sel, // 0 for reg data, 1 for imm
@@ -55,8 +54,8 @@ module control(
         `OP_JAL: begin
             $display("JAL instruction");
             branchEn <= 1'b1; // do arithmetic on pc  
-            immExtCtrl <= 2'b01; // signed 20-bit imm extension
-            imm_data <= {inst[31],inst[19:12], inst[20], inst[30:21]};
+            immExtCtrl <= 3'b100; // J-type immediate extension
+
             regWriteEn <= 1'b1; // write to rd
             aluS1Sel <= 1'b0; // select PC
             aluS2Sel <= 1'b1; // select immediate
@@ -228,7 +227,7 @@ module control(
                 end 
             endcase
             branchEn = 1'b0; 
-            imm_data = inst[31:20];
+            immExtCtrl = 3'b000;
             regWriteEn = 1'b1;
             memControl = 3'b000;
             regWriteBackDataSel = 1'b0;

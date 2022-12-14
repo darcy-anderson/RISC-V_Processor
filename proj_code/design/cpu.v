@@ -71,8 +71,8 @@ wire        cs_exe_reg_write_en;
 wire [3:0]  cs_exe_data_op;
 wire [2:0]  cs_exe_branch_op;
 wire        cs_exe_branch_result;
-wire [1:0]  cs_exe_imm_op; // I made a change here. Now it's 2 bit instead of the original 3
-wire [19:0] cs_exe_imm_data;
+wire [2:0]  cs_exe_imm_op; // 000-I, 001-S, 010-B, 011-U, 100-J
+//wire [19:0] cs_exe_imm_data;
 
 wire cs_exe_r1_sel;
 wire cs_exe_r2_sel;
@@ -124,7 +124,6 @@ control c (.clk(clk),
            .branchValid(cs_exe_branch_result),
            .branchEn(cs_jump_en),
            .immExtCtrl(cs_exe_imm_op),
-           .imm_data(cs_exe_imm_data),
            .branchCompareOp(cs_exe_branch_op),
            .aluS1Sel(cs_exe_r1_sel),
            .aluS2Sel(cs_exe_r2_sel),
@@ -144,7 +143,7 @@ register_file rf(.clk(clk),
                  .r1(exe_r1),
                  .r2(exe_r2),
                  .write_data(exe_write_data),
-                 .w_en(cs_exe_reg_write_en),
+                 .w_en(cs_wb_en),
                  .r_en(cs_exe_en),
                  .r1_read(exe_r1_data),
                  .r2_read(exe_r2_data));
@@ -159,8 +158,8 @@ BranchCompare bc(.rs1(exe_r1_data),
                  .opcode(cs_exe_branch_op),
                  .out(cs_exe_branch_result));     
 
-imm_ext ie(.imm_ext_en(cs_exe_imm_op),
-           .imm_in(cs_exe_imm_data),
+imm_ext ie(.imm_opcode(cs_exe_imm_op),
+           .inst(id_instr),
            .imm_out(exe_imm_extended));
 
 assign exe_alu_s1_data = (cs_exe_r1_sel)? exe_r1_data : pc_curr;
