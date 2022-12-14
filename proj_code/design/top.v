@@ -35,7 +35,7 @@ end
 
 initial begin
 reset=1;
-#200;
+#100;
 reset=0;
 end
 

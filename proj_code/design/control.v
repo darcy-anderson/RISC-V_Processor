@@ -54,15 +54,15 @@ module control(
 //        end
         `OP_JAL: begin
             $display("JAL instruction");
-            branchEn = 1'b1; // do arithmetic on pc  
-            immExtCtrl = 2'b01; // signed 20-bit imm extension
-            imm_data = {inst[31],inst[19:12], inst[20], inst[30:21]};
-            regWriteEn = 1'b1; // write to rd
-            aluS1Sel = 1'b0; // select PC
-            aluS2Sel = 1'b1; // select immediate
-            aluOp = `EXE_ADD_OP;
-            regWriteBackDataSel = 1'b0;
-            linkRegWriteEn = 1'b1;
+            branchEn <= 1'b1; // do arithmetic on pc  
+            immExtCtrl <= 2'b01; // signed 20-bit imm extension
+            imm_data <= {inst[31],inst[19:12], inst[20], inst[30:21]};
+            regWriteEn <= 1'b1; // write to rd
+            aluS1Sel <= 1'b0; // select PC
+            aluS2Sel <= 1'b1; // select immediate
+            aluOp <= `EXE_ADD_OP;
+            regWriteBackDataSel <= 1'b0;
+            linkRegWriteEn <= 1'b1;
           end
 //        `OP_JALR: begin
 //            regWriteEn = 1'b0;
@@ -239,7 +239,7 @@ module control(
         end
         default: begin
 //            $display("incorrect opcode");
-            branchEn = 1'b0;
+            branchEn <= 1'b0;
             
 //                output reg branchEn, // 0 for PC+4, 1 for new val; to be sent to PC mux to determine jump
 //    output reg [1:0] immExtCtrl,
