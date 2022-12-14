@@ -30,7 +30,7 @@ cpu processor(.clk(clk), .rst(reset));
 
 initial begin 
 clk=0;
-forever #10 clk=~clk;
+forever #20 clk=~clk;
 end
 
 initial begin

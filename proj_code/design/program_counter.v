@@ -14,11 +14,13 @@ reg [31:0] i_out;
 
 always @(posedge clk)
 begin
-    if (en) 
+    if (en) begin
         i_out <= c_in;
-    else if (rst)
+        $display("The new PC address is %h", i_out); 
+    end
+    else if (rst) begin
         i_out <= 32'h01000000;
-    $display("The new PC address is %h", i_out); 
+    end
 end
 assign c_out = i_out;
 

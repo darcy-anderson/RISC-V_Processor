@@ -94,18 +94,20 @@ wire cs_id_en;
 wire cs_exe_en;  // state machine
 wire cs_mem_en;
 wire cs_wb_en;
+wire cs_pc_en;
 
 assign cs_if_en  = (state_curr == fetch);
 assign cs_id_en  = (state_curr == decode);
 assign cs_exe_en = (state_curr == execute);
 assign cs_mem_en = (state_curr == memory);
+assign cs_pc_en = (state_curr == write);
 assign cs_wb_en  = (state_curr == write) & (cs_exe_reg_write_en == 1'b1);
 
 // >> Components <<
 // -- INSTRUCTION FETCH --    
 program_counter pc (.clk(clk), 
                     .rst(rst),
-                    .en(cs_if_en),
+                    .en(cs_pc_en),
                     .c_in(pc_next_inst),
                     .c_out(pc_curr));
 
@@ -115,7 +117,7 @@ assign pc_next_inst = cs_jump_en? pc_jump : pc_curr_increment;
 
 // -- INSTRUCTION DECODE --     
 instr_mem im(.clk(clk),
-             .imem_en(cs_id_en),
+             .imem_en(cs_if_en),
              .pc_addr(pc_curr), 
              .instr_out(id_instr));
 
