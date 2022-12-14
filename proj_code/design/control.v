@@ -53,15 +53,16 @@ module control(
 //            branchEn = 1'b1; // change pc     
 //        end
         `OP_JAL: begin
+            $display("JAL instruction");
             branchEn = 1'b1; // do arithmetic on pc  
-            immExtCtrl = 2'b01; // unsigned 20-bit imm extension
+            immExtCtrl = 2'b01; // signed 20-bit imm extension
+            imm_data = {inst[31],inst[19:12], inst[20], inst[30:21]};
             regWriteEn = 1'b1; // write to rd
-            memRead = 1'b0;
-            memWrite = 1'b0;
-            regWriteBackDataSel = 1'b0;
-            aluS1Sel = 1'b1; // select PC
-            aluS2Sel = 1'b0;
+            aluS1Sel = 1'b0; // select PC
+            aluS2Sel = 1'b1; // select immediate
             aluOp = `EXE_ADD_OP;
+            regWriteBackDataSel = 1'b0;
+            linkRegWriteEn = 1'b1;
           end
 //        `OP_JALR: begin
 //            regWriteEn = 1'b0;

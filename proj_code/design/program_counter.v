@@ -18,7 +18,8 @@ begin
         i_out <= c_in;
     else if (rst)
         i_out <= 32'h01000000;
+    $display("The new PC address is %h", i_out); 
 end
-
 assign c_out = i_out;
+
 endmodule

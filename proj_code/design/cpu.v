@@ -110,6 +110,7 @@ program_counter pc (.clk(clk),
                     .c_out(pc_curr));
 
 assign pc_curr_increment = pc_curr + 3'b100; // best place here?
+assign pc_jump = exe_rd_output_data;
 assign pc_next_inst = cs_jump_en? pc_jump : pc_curr_increment;
 
 // -- INSTRUCTION DECODE --     
