@@ -84,8 +84,8 @@ wire [31:0] mem_data_out;
 wire [31:0] mem_addr;
 
 // -- WRITE BACK --
-wire cs_wb_data_sel;
-wire cs_wb_pc_addr;
+wire [1:0] cs_wb_data_sel;
+// wire cs_wb_pc_addr;
 
 // >> State Machine <<
 
@@ -131,8 +131,7 @@ control c (.clk(clk),
            .aluS2Sel(cs_exe_r2_sel),
            .aluOp(cs_exe_data_op),
            .regWriteEn(cs_exe_reg_write_en),
-           .regWriteBackDataSel(cs_wb_data_sel),
-           .linkRegWriteEn(cs_wb_pc_addr));
+           .regWriteBackDataSel(cs_wb_data_sel));
 
 assign exe_rd = id_instr[11:7];
 assign exe_r1 = id_instr[19:15];
@@ -167,8 +166,12 @@ imm_ext ie(.imm_opcode(cs_exe_imm_op),
 
 assign exe_alu_s1_data = (cs_exe_r1_sel)? exe_r1_data : pc_curr;
 assign exe_alu_s2_data = (cs_exe_r2_sel)? exe_imm_extended : exe_r2_data;
-assign exe_write_data = cs_wb_pc_addr? pc_curr_increment: cs_wb_data_sel? mem_data_out: exe_rd_output_data; // currently not taking cs_wb_data_sel and cs_wb_pc_addr into account
-
+//assign exe_write_data = cs_wb_pc_addr? pc_curr_increment: cs_wb_data_sel? mem_data_out: exe_rd_output_data; // currently not taking cs_wb_data_sel and cs_wb_pc_addr into account
+assign exe_write_data = (cs_wb_data_sel == 2'b00) ? pc_curr_increment : // J-type
+                        (cs_wb_data_sel == 2'b01) ? mem_data_out : // I-type load
+                        (cs_wb_data_sel == 2'b10) ? exe_rd_output_data : // ALU
+                        (cs_wb_data_sel == 2'b11) ? exe_imm_extended : // LUI
+                        32'd0;
 // -- MEMORY --
 data_mem dm(.clk(clk),
             .mem_en(cs_mem_en),

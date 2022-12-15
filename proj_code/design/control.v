@@ -22,8 +22,8 @@ module control(
     output reg [3:0] aluOp, // usually generated from 
     output reg [3:0] memControl, // TODO: modify to 2 bits for word/half/byte access
     output reg regWriteEn,
-    output reg regWriteBackDataSel, // 0 for ALU result, 1 for mem data
-    output reg linkRegWriteEn
+    output reg [1:0] regWriteBackDataSel // 00-J, 01-I/load, 10-I/ALU, 11-U
+    //output reg linkRegWriteEn
     );
     
     wire[6:0] instOpcode = inst[6:0];
@@ -33,24 +33,23 @@ module control(
     always @ (clk, inst) begin
     
     case (instOpcode) 
-//        `OP_LUI: begin 
-//            regWriteEn = 1'b0;
-//            memRead = 1'b0;
-//            memWrite = 1'b0;
-//            regWriteBackDataSel = 1'b0;
-//            aluS2Sel = 1'b1;
-//            aluOp = `EXE_ADD_OP; // add upper immediate 
-//            branchEn = 1'b0;        
-//        end
-//        `OP_AUIPC: begin
-//            regWriteEn = 1'b0;
-//            memRead = 1'b0;
-//            memWrite = 1'b0;
-//            regWriteBackDataSel = 1'b0;
-//            aluS2Sel = 1'b1;
-//            aluOp = `EXE_ADD_OP;
-//            branchEn = 1'b1; // change pc     
-//        end
+        `OP_LUI: begin 
+            branchEn = 1'b0; // not branching  
+            immExtCtrl = 3'b011; // U-type
+            regWriteEn = 1'b1; // write to rd
+            regWriteBackDataSel = 2'b11; // U-type write back
+        end
+        
+        `OP_AUIPC: begin
+            branchEn = 1'b0; // not branching
+            immExtCtrl = 3'b011; // U-type
+            aluS1Sel = 1'b0; // select PC
+            aluS2Sel = 1'b1; // select immediate
+            aluOp = `EXE_ADD_OP; // do addition
+            regWriteEn = 1'b1; // write to rd
+            regWriteBackDataSel = 2'b10; // ALU write back
+        end
+        
         `OP_JAL: begin
             $display("JAL instruction");
             branchEn <= 1'b1; // do arithmetic on pc  
@@ -59,8 +58,7 @@ module control(
             aluS1Sel <= 1'b0; // select PC
             aluS2Sel <= 1'b1; // select immediate
             aluOp <= `EXE_ADD_OP;
-            regWriteBackDataSel <= 1'b0;
-            linkRegWriteEn <= 1'b1;
+            regWriteBackDataSel <= 2'b00; // J-type write back
           end
         `OP_JALR: begin
             branchEn <= 1'b1; // do arithmetic on pc  
@@ -69,8 +67,8 @@ module control(
             aluS1Sel <= 1'b1; // select r1
             aluS2Sel <= 1'b1; // select immediate
             aluOp <= `EXE_ADD_OP;
-            regWriteBackDataSel <= 1'b0;
-            linkRegWriteEn <= 1'b1;
+            aluOp <= `EXE_ADD_OP;
+            regWriteBackDataSel <= 2'b00; // J-type write back
         end
         
         `OP_BRANCH: begin // Missing - IMM value sent to sign extension module for pc counter handling
@@ -94,12 +92,12 @@ module control(
                     branchCompareOp <= `EXE_BGEU_OP;
                 end
             endcase
-            immExtCtrl <= 3'b010;
+            immExtCtrl <= 3'b010; // B type immediate
             aluS1Sel <= 1'b0; // select PC
             aluS2Sel <= 1'b1; // select immediate
             aluOp <= `EXE_ADD_OP;
             regWriteEn <= 1'b0; // will not write to Reg
-            regWriteBackDataSel <= 1'b0; // this doesn't matter since we are not writing anything to Reg
+            regWriteBackDataSel <= 2'b00; // this doesn't matter since we are not writing anything to Reg
             if (branchValid) begin
                 branchEn <= 1'b1; // change pc   
             end
@@ -182,20 +180,16 @@ module control(
                     aluOp = `EXE_AND_OP;
                 end
             endcase
-            regWriteEn = 1'b1;
-            memControl = 3'b000;
-            regWriteBackDataSel = 1'b0;
-            linkRegWriteEn = 1'b0;
-            aluS1Sel = 1'b1;
-            aluS2Sel = 1'b0;
-            branchEn = 1'b0;      
-
+            branchEn = 1'b0; // not branching
+            aluS1Sel = 1'b1; // select reg 1
+            aluS2Sel = 1'b0; // select reg 2
+            regWriteEn = 1'b1; // write to Reg file
+            regWriteBackDataSel <= 2'b10; // ALU write back
         end        
         `OP_ALU_IMM: begin
             case(funct3)
                 `FUNCT3_ADDI : begin // sub == add negative value
                     aluOp = `EXE_ADD_OP;
-                    immExtCtrl = 2'b01;
                     $display ("addi instruction");
                 end
                 `FUNCT3_SLTI : begin
@@ -223,15 +217,12 @@ module control(
                     endcase
                 end 
             endcase
-            branchEn = 1'b0; 
-            immExtCtrl = 3'b000;
-            regWriteEn = 1'b1;
-            memControl = 3'b000;
-            regWriteBackDataSel = 1'b0;
-            linkRegWriteEn = 1'b0;
-            aluS1Sel = 1'b1;
-            aluS2Sel = 1'b1;
-                
+            branchEn = 1'b0; // not branching
+            immExtCtrl = 3'b000; // I-type immediate
+            aluS1Sel = 1'b1; // select reg 1
+            aluS2Sel = 1'b1; // select imm
+            regWriteEn = 1'b1; // write to Reg
+            regWriteBackDataSel <= 2'b10; // ALU write back
         end
         default: begin
 //            $display("incorrect opcode");
