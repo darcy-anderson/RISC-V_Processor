@@ -55,7 +55,6 @@ module control(
             $display("JAL instruction");
             branchEn <= 1'b1; // do arithmetic on pc  
             immExtCtrl <= 3'b100; // J-type immediate extension
-
             regWriteEn <= 1'b1; // write to rd
             aluS1Sel <= 1'b0; // select PC
             aluS2Sel <= 1'b1; // select immediate
@@ -63,43 +62,48 @@ module control(
             regWriteBackDataSel <= 1'b0;
             linkRegWriteEn <= 1'b1;
           end
-//        `OP_JALR: begin
-//            regWriteEn = 1'b0;
-//            memRead = 1'b0;
-//            memWrite = 1'b0;
-//            regWriteBackDataSel = 1'b0;
-//            aluS2Sel = 1'b0;
-//            aluOp = `EXE_JALR_OP;
-//            branchEn = 1'b1; // change pc     
-//        end
-//        `OP_branch: begin // Missing - IMM value sent to sign extension module for pc counter handling
-//            case(funct3)
-//                `FUNCT3_BEQ : begin
-//                    aluOp = `EXE_BEQ_OP;
-//                end
-//                `FUNCT3_BNE : begin
-//                    aluOp = `EXE_BNE_OP;
-//                end
-//                `FUNCT3_BLT : begin
-//                    aluOp = `EXE_BLT_OP;
-//                end
-//                `FUNCT3_BGE : begin
-//                    aluOp = `EXE_BGE_OP;
-//                end 
-//                `FUNCT3_BLTU : begin
-//                    aluOp = `EXE_BLTU_OP;
-//                end
-//                `FUNCT3_BGEU : begin
-//                    aluOp = `EXE_BGEU_OP;
-//                end
-//            endcase
-//            aluS2Sel = 1'b0;
-//            regWriteEn = 1'b0;
-//            memRead = 1'b0;
-//            memWrite = 1'b0;
-//            regWriteBackDataSel = 1'b0;
-//            branchEn = 1'b1; // change pc   
-//        end
+        `OP_JALR: begin
+            branchEn <= 1'b1; // do arithmetic on pc  
+            immExtCtrl <= 3'b000; // I-type immediate extension
+            regWriteEn <= 1'b1; // write to rd
+            aluS1Sel <= 1'b1; // select r1
+            aluS2Sel <= 1'b1; // select immediate
+            aluOp <= `EXE_ADD_OP;
+            regWriteBackDataSel <= 1'b0;
+            linkRegWriteEn <= 1'b1;
+        end
+        
+        `OP_BRANCH: begin // Missing - IMM value sent to sign extension module for pc counter handling
+            case(funct3)
+                `FUNCT3_BEQ : begin
+                    branchCompareOp <= `EXE_BEQ_OP;
+                end
+                `FUNCT3_BNE : begin
+                    branchCompareOp <= `EXE_BNE_OP;
+                end
+                `FUNCT3_BLT : begin
+                    branchCompareOp <= `EXE_BLT_OP;
+                end
+                `FUNCT3_BGE : begin
+                    branchCompareOp <= `EXE_BGE_OP;
+                end 
+                `FUNCT3_BLTU : begin
+                    branchCompareOp <= `EXE_BLTU_OP;
+                end
+                `FUNCT3_BGEU : begin
+                    branchCompareOp <= `EXE_BGEU_OP;
+                end
+            endcase
+            immExtCtrl <= 3'b010;
+            aluS1Sel <= 1'b0; // select PC
+            aluS2Sel <= 1'b1; // select immediate
+            aluOp <= `EXE_ADD_OP;
+            regWriteEn <= 1'b0; // will not write to Reg
+            regWriteBackDataSel <= 1'b0; // this doesn't matter since we are not writing anything to Reg
+            if (branchValid) begin
+                branchEn <= 1'b1; // change pc   
+            end
+        end
 //        `OP_LOAD: begin // TODO: info handling for sign extension module, and 
 //            case(funct3) 
 //                `FUNCT3_LB : begin
@@ -196,34 +200,27 @@ module control(
                 end
                 `FUNCT3_SLTI : begin
                     aluOp = `EXE_SLT_OP;
-                    immExtCtrl = 2'b01;
                 end
                 `FUNCT3_SLTIU : begin
                     aluOp = `EXE_SLTU_OP;
-                    immExtCtrl = 2'b10;
                 end 
                 `FUNCT3_XORI : begin
                     aluOp = `EXE_XOR_OP;
-                    immExtCtrl = 2'b01;
                 end
                 `FUNCT3_ORI : begin
                     aluOp = `EXE_OR_OP;
-                    immExtCtrl = 2'b01;
                 end
                 `FUNCT3_ANDI : begin
                     aluOp = `EXE_AND_OP;
-                    immExtCtrl = 2'b01;
                 end
                 `FUNCT3_SLLI : begin
                     aluOp = `EXE_SLL_OP;
-                    immExtCtrl = 2'b10;
                 end
                 `FUNCT3_SRL_SRA : begin
                     case(funct7)
                         `FUNCT7_SRL: aluOp = `EXE_SRL_OP;
                         `FUNCT7_SRA: aluOp = `EXE_SRA_OP;
                     endcase
-                    immExtCtrl = 2'b10;
                 end 
             endcase
             branchEn = 1'b0; 

@@ -130,7 +130,6 @@ control c (.clk(clk),
            .aluS1Sel(cs_exe_r1_sel),
            .aluS2Sel(cs_exe_r2_sel),
            .aluOp(cs_exe_data_op),
-//           .memControl(cs_mem_control), -> should be divided to multiple parts?
            .regWriteEn(cs_exe_reg_write_en),
            .regWriteBackDataSel(cs_wb_data_sel),
            .linkRegWriteEn(cs_wb_pc_addr));
@@ -150,15 +149,17 @@ register_file rf(.clk(clk),
                  .r1_read(exe_r1_data),
                  .r2_read(exe_r2_data));
                  
+BranchCompare bc(.rs1(exe_r1_data),
+                 .rs2(exe_r2_data),
+                 .opcode(cs_exe_branch_op),
+                 .out(cs_exe_branch_result));     
+                                  
 ALU alu(.operand1(exe_alu_s1_data), 
         .operand2(exe_alu_s2_data),
         .opcode(cs_exe_data_op),
         .out(exe_rd_output_data));             
      
-BranchCompare bc(.rs1(exe_r1_data),
-                 .rs2(exe_r2_data),
-                 .opcode(cs_exe_branch_op),
-                 .out(cs_exe_branch_result));     
+
 
 imm_ext ie(.imm_opcode(cs_exe_imm_op),
            .inst(id_instr),
