@@ -4,7 +4,9 @@
 
 module cpu(
     input wire clk,
-    input wire rst
+    input wire rst,
+    input wire [15:0] sw,
+    output wire [15:0] led
     );
     
 // >> State Machine <<
@@ -175,9 +177,14 @@ assign exe_write_data = (cs_wb_data_sel == 2'b00) ? pc_curr_increment : // J-typ
 // -- MEMORY --
 data_mem dm(.clk(clk),
             .mem_en(cs_mem_en),
+            .mem_we(cs_mem_we),
+            .mem_se(cs_mem_se),
+            .mem_bs(cs_mem_bs),
             .addr(mem_addr),
             .data_in(mem_data_in),
-            .data_out(mem_data_out));
+            .data_out(mem_data_out),
+            .sw_in(sw),
+            .led_out(led));
 
 
 

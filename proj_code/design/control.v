@@ -17,10 +17,12 @@ module control(
     output reg branchEn, // 0 for PC+4, 1 for new val; to be sent to PC mux to determine jump
     output reg [2:0] immExtCtrl, // 000-I, 001-S, 010-B, 011-U, 100-J
     output reg [2:0] branchCompareOp,
-    output reg aluS1Sel, // 0 for pc to be used during jump immediates, 1 for reg1
-    output reg aluS2Sel, // 0 for reg data, 1 for imm
-    output reg [3:0] aluOp, // usually generated from 
-    output reg [3:0] memControl, // TODO: modify to 2 bits for word/half/byte access
+    output reg aluS1Sel, // 0 for pc, 1 for reg1
+    output reg aluS2Sel, // 0 for reg2, 1 for imm
+    output reg [3:0] aluOp, // ALU opcode
+    output reg mem_we, // 0 for not writing to data, 1 for writing to data
+    output reg mem_se, // 0 for zero extension, 1 for sign extension
+    output reg [1:0] mem_bs, // selecting memory bus
     output reg regWriteEn,
     output reg [1:0] regWriteBackDataSel // 00-J, 01-I/load, 10-I/ALU, 11-U
     //output reg linkRegWriteEn
@@ -60,13 +62,13 @@ module control(
             aluOp <= `EXE_ADD_OP;
             regWriteBackDataSel <= 2'b00; // J-type write back
           end
+          
         `OP_JALR: begin
             branchEn <= 1'b1; // do arithmetic on pc  
             immExtCtrl <= 3'b000; // I-type immediate extension
             regWriteEn <= 1'b1; // write to rd
             aluS1Sel <= 1'b1; // select r1
             aluS2Sel <= 1'b1; // select immediate
-            aluOp <= `EXE_ADD_OP;
             aluOp <= `EXE_ADD_OP;
             regWriteBackDataSel <= 2'b00; // J-type write back
         end
@@ -102,50 +104,66 @@ module control(
                 branchEn <= 1'b1; // change pc   
             end
         end
-//        `OP_LOAD: begin // TODO: info handling for sign extension module, and 
-//            case(funct3) 
-//                `FUNCT3_LB : begin
-//                    aluOp = `EXE_LB_OP;
-//                end
-//                `FUNCT3_LH : begin
-//                    aluOp = `EXE_LH_OP;
-//                end
-//                `FUNCT3_LW : begin
-//                    aluOp = `EXE_LW_OP;
-//                end
-//                `FUNCT3_LBU : begin
-//                    aluOp = `EXE_LBU_OP;
-//                end 
-//                `FUNCT3_LHU : begin
-//                    aluOp = `EXE_LHU_OP;
-//                end
-//            endcase
-//            regWriteEn = 1'b1;
-//            memRead = 1'b1; // TODO: update to 2 bits and set different values for each funct3, or add a memory control unit to mask unwanted values
-//            memWrite = 1'b0;
-//            regWriteBackDataSel = 1'b1;
-//            aluS2Sel = 1'b0;
-//            branchEn = 1'b0;     
-//        end         
-//        `OP_STORE: begin            
-//        case(funct3) 
-//                `FUNCT3_SB : begin
-//                    aluOp = `EXE_SB_OP;
-//                end
-//                `FUNCT3_SH : begin
-//                    aluOp = `EXE_SH_OP;
-//                end
-//                `FUNCT3_SW : begin
-//                    aluOp = `EXE_SW_OP;
-//                end
-//            endcase
-//            regWriteEn = 1'b0;
-//            memRead = 1'b0;
-//            memWrite = 1'b1; // TODO:
-//            regWriteBackDataSel = 1'b0;
-//            aluS2Sel = 1'b1;
-//            branchEn = 1'b0;     
-//        end        
+        
+        `OP_LOAD: begin
+            case(funct3) 
+                `FUNCT3_LB : begin
+                    mem_we = 1'b0;
+                    mem_se = 1'b1;
+                    mem_bs = 2'b01;
+                end
+                `FUNCT3_LH : begin
+                    mem_we = 1'b0;
+                    mem_se = 1'b1;
+                    mem_bs = 2'b10;
+                end
+                `FUNCT3_LW : begin
+                    mem_we = 1'b0;
+                    mem_bs = 2'b11;
+                end
+                `FUNCT3_LBU : begin
+                    mem_we = 1'b0;
+                    mem_se = 1'b0;
+                    mem_bs = 2'b01;
+                end 
+                `FUNCT3_LHU : begin
+                    mem_we = 1'b0;
+                    mem_se = 1'b0;
+                    mem_bs = 2'b10;
+                end
+            endcase
+            branchEn = 1'b0; // do not branch
+            immExtCtrl <= 3'b000; // I-type immediate extension
+            aluS1Sel = 1'b1; // select reg 1
+            aluS2Sel = 1'b1; // select immediate
+            aluOp = `EXE_ADD_OP;
+            regWriteEn = 1'b1; // write to rd
+            regWriteBackDataSel = 2'b01; // I type load write back
+        end
+        
+        `OP_STORE: begin            
+        case(funct3) 
+                `FUNCT3_SB : begin
+                    mem_we = 1'b1;
+                    mem_bs = 2'b01;                    
+                end
+                `FUNCT3_SH : begin
+                    mem_we = 1'b1;
+                    mem_bs = 2'b10;   
+                end
+                `FUNCT3_SW : begin
+                    mem_we = 1'b1;
+                    mem_bs = 2'b11;   
+                end
+            endcase
+            branchEn = 1'b0; // do not branch
+            immExtCtrl <= 3'b001; // S-type immediate extension
+            aluS1Sel = 1'b1; // select reg 1
+            aluS2Sel = 1'b1; // select immediate
+            aluOp = `EXE_ADD_OP;
+            regWriteEn = 1'b0; // do not write to Reg
+        end        
+        
         `OP_ALU: begin
             case(funct3)
                 `FUNCT3_ADD_SUB : begin // sub == add negative value
