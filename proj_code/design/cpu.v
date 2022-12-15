@@ -4,7 +4,9 @@
 
 module cpu(
     input wire clk,
-    input wire rst
+    input wire rst,
+    input wire [15:0] sw,
+    output wire [15:0] led
     );
     
 // >> State Machine <<
@@ -78,7 +80,10 @@ wire cs_exe_r1_sel;
 wire cs_exe_r2_sel;
 
 // -- MEMORY --
-wire [2:0]  cs_mem_control;
+wire cs_mem_en;
+wire cs_mem_we;
+wire cs_mem_se;
+wire [1:0] cs_mem_bs;
 wire [31:0] mem_data_in;
 wire [31:0] mem_data_out;
 wire [31:0] mem_addr;
@@ -170,9 +175,14 @@ assign exe_write_data = cs_wb_pc_addr? pc_curr_increment: cs_wb_data_sel? mem_da
 // -- MEMORY --
 data_mem dm(.clk(clk),
             .mem_en(cs_mem_en),
+            .mem_we(cs_mem_we),
+            .mem_se(cs_mem_se),
+            .mem_bs(cs_mem_bs),
             .addr(mem_addr),
             .data_in(mem_data_in),
-            .data_out(mem_data_out));
+            .data_out(mem_data_out),
+            .sw_in(sw),
+            .led_out(led));
 
 
 
