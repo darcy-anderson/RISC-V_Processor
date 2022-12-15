@@ -140,7 +140,40 @@ module testbench_data_mem();
 			end   
     end
 
-    $fclose(fp);  
+    $fclose(fp);
+    
+    // Test identity register loads
+    t_mem_bs = 2'b11;
+    t_addr = 32'h00100000;
+		wait (t_clk == 1);
+		wait (t_clk == 0);
+		if (t_data_out != 32'b110110011010110000001000) begin
+			$display("Test failed. Output is not correct at time %t.", $time);
+			$stop;
+		end   
+    t_addr = 32'h00100004;
+		wait (t_clk == 1);
+		wait (t_clk == 0);
+		if (t_data_out != 32'b101010011110001001111110) begin
+			$display("Test failed. Output is not correct at time %t.", $time);
+			$stop;
+		end
+		t_addr = 32'h00100008;
+		wait (t_clk == 1);
+		wait (t_clk == 0);
+		if (t_data_out != 32'b101111101100101010010111) begin
+			$display("Test failed. Output is not correct at time %t.", $time);
+			$stop;
+		end
+		
+		// Test switch I/O register reads
+		t_addr = 32'h00100010;
+		wait (t_clk == 1);
+		wait (t_clk == 0);
+		if (t_data_out != 32'bx) begin
+			$display("Test failed. Output is not correct at time %t.", $time);
+			$stop;
+		end
 
     $display("All tests passed. Testbench concluded.");
     $stop;

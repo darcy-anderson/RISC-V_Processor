@@ -10,6 +10,11 @@ for n in range(1024):
   data = token_hex(4)
   test_case = "{},{},{}\n".format(mem_bs, addr, data)
   f.write(test_case)
+# LED register
+addr = hex(0x00100014)[2:]
+data = token_hex(4)
+test_case = "{},{},{}\n".format(mem_bs, addr, data)
+f.write(test_case)
 
 # Store half-word every address
 mem_bs = 2
@@ -18,11 +23,23 @@ for n in range(2048):
   data = '0000' + token_hex(2)
   test_case = "{},{},{}\n".format(mem_bs, addr, data)
   f.write(test_case)
+# LED register
+for n in range(2):
+  addr = hex(0x00100014 + n * 2)[2:]
+  data = '0000' + token_hex(2)
+  test_case = "{},{},{}\n".format(mem_bs, addr, data)
+  f.write(test_case)
 
 # Test save byte aligned/misaligned
 mem_bs = 1
 for n in range(4096):
   addr = hex(0x80000000 + n)[2:]
+  data = '000000' + token_hex(1)
+  test_case = "{},{},{}\n".format(mem_bs, addr, data)
+  f.write(test_case)
+# LED register
+for n in range(4):
+  addr = hex(0x00100014 + n)[2:]
   data = '000000' + token_hex(1)
   test_case = "{},{},{}\n".format(mem_bs, addr, data)
   f.write(test_case)
