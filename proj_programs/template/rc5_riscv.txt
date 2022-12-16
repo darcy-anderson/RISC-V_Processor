@@ -1,6 +1,6 @@
 main:
     // some memory location saved at x8, saving rom key
-
+    add     s0,sp,r0
     li      a5, 0x46F8E8C5 // first rom key, after two zeros
     sw      a5, -148(s0)
     li      a5, 0x460C6085
