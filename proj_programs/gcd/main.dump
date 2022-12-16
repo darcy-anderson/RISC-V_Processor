@@ -1,0 +1,50 @@
+
+main.elf:     file format elf32-littleriscv
+
+SYMBOL TABLE:
+01000000 l    d  .text	00000000 .text
+80000000 l    d  .data	00000000 .data
+80000000 l    d  .bss	00000000 .bss
+80000c00 l    d  .stack	00000000 .stack
+00000000 l    d  .riscv.attributes	00000000 .riscv.attributes
+00000000 l    df *ABS*	00000000 main.o
+01000018 l       .text	00000000 gcd
+01000030 l       .text	00000000 end
+01000028 l       .text	00000000 b_lessthan_a
+01000020 l       .text	00000000 a_lessthan_b
+01000000 g     F .text	00000000 reset_handler
+0100003c g       .text	00000000 _sidata
+80000000 g       .bss	00000000 _sbss
+00000400 g       *ABS*	00000000 __stack_size
+80000000 g       .data	00000000 _sdata
+80000000 g       .bss	00000000 _ebss
+80000000 g       .data	00000000 _edata
+
+
+
+Disassembly of section .text:
+
+01000000 <reset_handler>:
+ 1000000:	00100537          	lui	a0,0x100
+ 1000004:	01050513          	addi	a0,a0,16 # 100010 <__stack_size+0xffc10>
+ 1000008:	00055583          	lhu	a1,0(a0)
+ 100000c:	0ff00613          	li	a2,255
+ 1000010:	00c5f533          	and	a0,a1,a2
+ 1000014:	0085d593          	srli	a1,a1,0x8
+
+01000018 <gcd>:
+ 1000018:	00b50c63          	beq	a0,a1,1000030 <end>
+ 100001c:	00a5c663          	blt	a1,a0,1000028 <b_lessthan_a>
+
+01000020 <a_lessthan_b>:
+ 1000020:	40a585b3          	sub	a1,a1,a0
+ 1000024:	ff5ff06f          	j	1000018 <gcd>
+
+01000028 <b_lessthan_a>:
+ 1000028:	40b50533          	sub	a0,a0,a1
+ 100002c:	fedff06f          	j	1000018 <gcd>
+
+01000030 <end>:
+ 1000030:	00100637          	lui	a2,0x100
+ 1000034:	01460613          	addi	a2,a2,20 # 100014 <__stack_size+0xffc14>
+ 1000038:	00a61023          	sh	a0,0(a2)
