@@ -11,6 +11,8 @@
 `define OP_STORE    7'b0100011
 `define OP_ALU_IMM  7'b0010011
 `define OP_ALU      7'b0110011
+`define OP_FENCE    7'b0001111
+`define OP_ECALL_EBREAK 7'b1110011
 
 ////================== Instruction funct3 in RISC-V ================== 
 // JALR
