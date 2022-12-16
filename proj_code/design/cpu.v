@@ -20,12 +20,18 @@ localparam [2:0]
     write   = 3'b101;
 reg[2:0] state_curr, state_next;
 
-always @ (negedge clk, posedge rst)
+wire fsm_halt_flag;
+
+always @ (negedge clk, posedge rst, posedge fsm_halt_flag)
 begin
     if (rst)
         state_curr <= idle;
-    else
-        state_curr <= state_next;
+    else begin
+        if (fsm_halt_flag)
+            state_curr = halt;
+        else
+            state_curr <= state_next;   
+    end
 end
 
 always @(state_curr)
@@ -138,7 +144,8 @@ control c (.clk(clk),
            .mem_se(cs_mem_se),
            .mem_bs(cs_mem_bs),
            .regWriteEn(cs_exe_reg_write_en),
-           .regWriteBackDataSel(cs_wb_data_sel));
+           .regWriteBackDataSel(cs_wb_data_sel),
+           .halt_flag(fsm_halt_flag));
 
 assign exe_rd = id_instr[11:7];
 assign exe_r1 = id_instr[19:15];

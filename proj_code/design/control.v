@@ -17,7 +17,8 @@ module control(
     output reg mem_se, // 0 for zero extension, 1 for sign extension
     output reg [1:0] mem_bs, // selecting memory bus
     output reg regWriteEn,
-    output reg [1:0] regWriteBackDataSel // 00-J, 01-I/load, 10-I/ALU, 11-U
+    output reg [1:0] regWriteBackDataSel, // 00-J, 01-I/load, 10-I/ALU, 11-U
+    output reg halt_flag
     //output reg linkRegWriteEn
     );
     
@@ -29,20 +30,20 @@ module control(
     
     case (instOpcode) 
         `OP_LUI: begin 
-            branchEn = 1'b0; // not branching  
-            immExtCtrl = 3'b011; // U-type
-            regWriteEn = 1'b1; // write to rd
-            regWriteBackDataSel = 2'b11; // U-type write back
+            branchEn <= 1'b0; // not branching  
+            immExtCtrl <= 3'b011; // U-type
+            regWriteEn <= 1'b1; // write to rd
+            regWriteBackDataSel <= 2'b11; // U-type write back
         end
         
         `OP_AUIPC: begin
-            branchEn = 1'b0; // not branching
-            immExtCtrl = 3'b011; // U-type
-            aluS1Sel = 1'b0; // select PC
-            aluS2Sel = 1'b1; // select immediate
-            aluOp = `EXE_ADD_OP; // do addition
-            regWriteEn = 1'b1; // write to rd
-            regWriteBackDataSel = 2'b10; // ALU write back
+            branchEn <= 1'b0; // not branching
+            immExtCtrl <= 3'b011; // U-type
+            aluS1Sel <= 1'b0; // select PC
+            aluS2Sel <=1 'b1; // select immediate
+            aluOp <= `EXE_ADD_OP; // do addition
+            regWriteEn <= 1'b1; // write to rd
+            regWriteBackDataSel <= 2'b10; // ALU write back
         end
         
         `OP_JAL: begin
@@ -101,60 +102,60 @@ module control(
         `OP_LOAD: begin
             case(funct3) 
                 `FUNCT3_LB : begin
-                    mem_we = 1'b0;
-                    mem_se = 1'b1;
-                    mem_bs = 2'b01;
+                    mem_we <= 1'b0;
+                    mem_se <= 1'b1;
+                    mem_bs <= 2'b01;
                 end
                 `FUNCT3_LH : begin
-                    mem_we = 1'b0;
-                    mem_se = 1'b1;
-                    mem_bs = 2'b10;
+                    mem_we <= 1'b0;
+                    mem_se <= 1'b1;
+                    mem_bs <= 2'b10;
                 end
                 `FUNCT3_LW : begin
-                    mem_we = 1'b0;
-                    mem_bs = 2'b11;
+                    mem_we <= 1'b0;
+                    mem_bs <=2'b11;
                 end
                 `FUNCT3_LBU : begin
-                    mem_we = 1'b0;
-                    mem_se = 1'b0;
-                    mem_bs = 2'b01;
+                    mem_we <= 1'b0;
+                    mem_se <= 1'b0;
+                    mem_bs <= 2'b01;
                 end 
                 `FUNCT3_LHU : begin
-                    mem_we = 1'b0;
-                    mem_se = 1'b0;
-                    mem_bs = 2'b10;
+                    mem_we <= 1'b0;
+                    mem_se <= 1'b0;
+                    mem_bs <= 2'b10;
                 end
             endcase
-            branchEn = 1'b0; // do not branch
+            branchEn <= 1'b0; // do not branch
             immExtCtrl <= 3'b000; // I-type immediate extension
-            aluS1Sel = 1'b1; // select reg 1
-            aluS2Sel = 1'b1; // select immediate
-            aluOp = `EXE_ADD_OP;
-            regWriteEn = 1'b1; // write to rd
-            regWriteBackDataSel = 2'b01; // I type load write back
+            aluS1Sel <= 1'b1; // select reg 1
+            aluS2Sel <= 1'b1; // select immediate
+            aluOp <= `EXE_ADD_OP;
+            regWriteEn <= 1'b1; // write to rd
+            regWriteBackDataSel <= 2'b01; // I type load write back
         end
         
         `OP_STORE: begin            
         case(funct3) 
                 `FUNCT3_SB : begin
-                    mem_we = 1'b1;
-                    mem_bs = 2'b01;                    
+                    mem_we <= 1'b1;
+                    mem_bs <= 2'b01;                    
                 end
                 `FUNCT3_SH : begin
-                    mem_we = 1'b1;
-                    mem_bs = 2'b10;   
+                    mem_we <= 1'b1;
+                    mem_bs <= 2'b10;   
                 end
                 `FUNCT3_SW : begin
-                    mem_we = 1'b1;
-                    mem_bs = 2'b11;   
+                    mem_we <= 1'b1;
+                    mem_bs <= 2'b11;   
                 end
             endcase
-            branchEn = 1'b0; // do not branch
+            branchEn <= 1'b0; // do not branch
             immExtCtrl <= 3'b001; // S-type immediate extension
-            aluS1Sel = 1'b1; // select reg 1
-            aluS2Sel = 1'b1; // select immediate
-            aluOp = `EXE_ADD_OP;
-            regWriteEn = 1'b0; // do not write to Reg
+            aluS1Sel <= 1'b1; // select reg 1
+            aluS2Sel <= 1'b1; // select immediate
+            aluOp <= `EXE_ADD_OP;
+            regWriteEn <= 1'b0; // do not write to Reg
         end        
         
         `OP_ALU: begin
@@ -162,80 +163,96 @@ module control(
                 `FUNCT3_ADD_SUB : begin // sub == add negative value
                 $display ("add/sub instruction");
                     case(funct7)
-                        `FUNCT7_ADD: aluOp = `EXE_ADD_OP;
-                        `FUNCT7_SUB: aluOp = `EXE_SUB_OP;
+                        `FUNCT7_ADD: aluOp <= `EXE_ADD_OP;
+                        `FUNCT7_SUB: aluOp <= `EXE_SUB_OP;
                     endcase
                 end
                 `FUNCT3_SLL : begin
-                    aluOp = `EXE_SLL_OP;
+                    aluOp <= `EXE_SLL_OP;
                 end
                 `FUNCT3_SLT : begin
-                    aluOp = `EXE_SLT_OP;
+                    aluOp <= `EXE_SLT_OP;
                 end
                 `FUNCT3_SLTU : begin
-                    aluOp = `EXE_SLTU_OP;
+                    aluOp <= `EXE_SLTU_OP;
                 end 
                 `FUNCT3_XOR : begin
-                    aluOp = `EXE_XOR_OP;
+                    aluOp <= `EXE_XOR_OP;
                 end
                 `FUNCT3_SRL_SRA : begin
                     case(funct7)
-                        `FUNCT7_SRL: aluOp = `EXE_SRL_OP;
-                        `FUNCT7_SRA: aluOp = `EXE_SRA_OP;
+                        `FUNCT7_SRL: aluOp <= `EXE_SRL_OP;
+                        `FUNCT7_SRA: aluOp <= `EXE_SRA_OP;
                     endcase
                 end 
                 `FUNCT3_OR : begin
-                    aluOp = `EXE_OR_OP;
+                    aluOp <= `EXE_OR_OP;
                 end
                 `FUNCT3_AND : begin
-                    aluOp = `EXE_AND_OP;
+                    aluOp <= `EXE_AND_OP;
                 end
             endcase
-            branchEn = 1'b0; // not branching
-            aluS1Sel = 1'b1; // select reg 1
-            aluS2Sel = 1'b0; // select reg 2
-            regWriteEn = 1'b1; // write to Reg file
+            branchEn <= 1'b0; // not branching
+            aluS1Sel <= 1'b1; // select reg 1
+            aluS2Sel <= 1'b0; // select reg 2
+            regWriteEn <= 1'b1; // write to Reg file
             regWriteBackDataSel <= 2'b10; // ALU write back
         end        
         
         `OP_ALU_IMM: begin
             case(funct3)
                 `FUNCT3_ADDI : begin // sub == add negative value
-                    aluOp = `EXE_ADD_OP;
+                    aluOp <=`EXE_ADD_OP;
                     $display ("addi instruction");
                 end
                 `FUNCT3_SLTI : begin
-                    aluOp = `EXE_SLT_OP;
+                    aluOp <= `EXE_SLT_OP;
                 end
                 `FUNCT3_SLTIU : begin
-                    aluOp = `EXE_SLTU_OP;
+                    aluOp <= `EXE_SLTU_OP;
                 end 
                 `FUNCT3_XORI : begin
-                    aluOp = `EXE_XOR_OP;
+                    aluOp <= `EXE_XOR_OP;
                 end
                 `FUNCT3_ORI : begin
-                    aluOp = `EXE_OR_OP;
+                    aluOp <= `EXE_OR_OP;
                 end
                 `FUNCT3_ANDI : begin
-                    aluOp = `EXE_AND_OP;
+                    aluOp <= `EXE_AND_OP;
                 end
                 `FUNCT3_SLLI : begin
-                    aluOp = `EXE_SLL_OP;
+                    aluOp <= `EXE_SLL_OP;
                 end
                 `FUNCT3_SRL_SRA : begin
                     case(funct7)
-                        `FUNCT7_SRL: aluOp = `EXE_SRL_OP;
-                        `FUNCT7_SRA: aluOp = `EXE_SRA_OP;
+                        `FUNCT7_SRL: aluOp <= `EXE_SRL_OP;
+                        `FUNCT7_SRA: aluOp <= `EXE_SRA_OP;
                     endcase
                 end 
             endcase
-            branchEn = 1'b0; // not branching
-            immExtCtrl = 3'b000; // I-type immediate
-            aluS1Sel = 1'b1; // select reg 1
-            aluS2Sel = 1'b1; // select imm
-            regWriteEn = 1'b1; // write to Reg
+            branchEn <= 1'b0; // not branching
+            immExtCtrl <= 3'b000; // I-type immediate
+            aluS1Sel <= 1'b1; // select reg 1
+            aluS2Sel <= 1'b1; // select imm
+            regWriteEn <= 1'b1; // write to Reg
             regWriteBackDataSel <= 2'b10; // ALU write back
         end
+        
+        `OP_FENCE: begin
+            branchEn <= 1'b0; // not branching
+            mem_we <= 1'b0; // not writing any data
+            regWriteEn <= 1'b0; // not writing to reg 
+            // so basically we do nothing here.
+        end
+
+        `OP_ECALL_EBREAK: begin
+            branchEn <= 1'b0; // not branching
+            mem_we <= 1'b0; // not writing any data
+            regWriteEn <= 1'b0; // not writing to reg 
+            // so basically we do nothing here.
+            halt_flag <= 1'b1;
+        end
+        
         default: begin
             branchEn <= 1'b0;
         end
