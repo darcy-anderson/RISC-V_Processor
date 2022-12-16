@@ -7,6 +7,7 @@ module control(
     input wire clk,
     input wire [31:0] inst,
     input wire branchValid, // for branch equals operations
+    input wire control_enable,
     output reg branchEn, // 0 for PC+4, 1 for new val; to be sent to PC mux to determine jump
     output reg [2:0] immExtCtrl, // 000-I, 001-S, 010-B, 011-U, 100-J
     output reg [2:0] branchCompareOp,
@@ -27,7 +28,7 @@ module control(
     wire[6:0] funct7 = inst[31:25];
 
     always @ (clk, inst) begin
-    
+    if (control_enable) begin
     case (instOpcode) 
         `OP_LUI: begin 
             branchEn <= 1'b0; // not branching  
@@ -250,7 +251,7 @@ module control(
             mem_we <= 1'b0; // not writing any data
             regWriteEn <= 1'b0; // not writing to reg 
             // so basically we do nothing here.
-            halt_flag <= 1'b1;
+            halt_flag <= 1'b1; // force a halt.
         end
         
         default: begin
@@ -258,5 +259,9 @@ module control(
         end
     endcase
     
+    end
+    else begin
+        branchEn = 1'b0;
+    end
     end
 endmodule

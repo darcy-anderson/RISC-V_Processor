@@ -28,7 +28,7 @@ begin
         state_curr <= idle;
     else begin
         if (fsm_halt_flag)
-            state_curr = halt;
+            state_curr <= halt;
         else
             state_curr <= state_next;   
     end
@@ -108,7 +108,7 @@ wire cs_pc_en;
 
 assign cs_if_en  = (state_curr == fetch);
 assign cs_id_en  = (state_curr == decode);
-assign cs_exe_en = (state_curr == execute);
+assign cs_exe_en = (state_curr == execute) || (state_curr == memory) || (state_curr == write);
 assign cs_mem_en = (state_curr == memory) || (state_curr == write);
 assign cs_pc_en = (state_curr == write);
 assign cs_wb_en  = (state_curr == write) & (cs_exe_reg_write_en == 1'b1);
@@ -135,6 +135,7 @@ control c (.clk(clk),
            .inst(id_instr),
            .branchValid(cs_exe_branch_result),
            .branchEn(cs_jump_en),
+           .control_enable(cs_exe_en),
            .immExtCtrl(cs_exe_imm_op),
            .branchCompareOp(cs_exe_branch_op),
            .aluS1Sel(cs_exe_r1_sel),
@@ -158,7 +159,7 @@ register_file rf(.clk(clk),
                  .r2(exe_r2),
                  .write_data(exe_write_data),
                  .w_en(cs_wb_en),
-                 .r_en(cs_exe_en),
+                 .r_en(cs_id_en),
                  .r1_read(exe_r1_data),
                  .r2_read(exe_r2_data));
                  

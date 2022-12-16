@@ -21,16 +21,16 @@ reg [31:0] registers [0:31]; // the actual register content
 initial begin
 registers[0] <= 32'b0;
 registers[1] <= 32'b0;
-registers[2] <= 32'b0;
+registers[2] <= 32'h80000FFC;
 registers[3] <= 32'b0;
 registers[4] <= 32'b0;
-registers[5] <= 32'b1010;
+registers[5] <= 32'b0;
 registers[6] <= 32'b0;
-registers[7] <= 32'h7fffffff;
+registers[7] <= 32'b0;
 registers[8] <= 32'b0;
 registers[9] <= 32'b0;
-registers[10] <= 32'b0;
-registers[11] <= 32'b0;
+registers[10] <= 32'd2;
+registers[11] <= 32'd4;
 registers[12] <= 32'b0;
 registers[13] <= 32'b0;
 registers[14] <= 32'b0;

@@ -14,7 +14,7 @@ cpu cpu(.clk(clk), .rst(reset), .sw(switch_t), .led(led_t));
 
 initial begin 
 clk=0;
-forever #20 clk=~clk;
+forever #10 clk=~clk;
 end
 
 initial begin
