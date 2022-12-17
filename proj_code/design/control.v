@@ -162,7 +162,6 @@ module control(
         `OP_ALU: begin
             case(funct3)
                 `FUNCT3_ADD_SUB : begin // sub == add negative value
-                $display ("add/sub instruction");
                     case(funct7)
                         `FUNCT7_ADD: aluOp <= `EXE_ADD_OP;
                         `FUNCT7_SUB: aluOp <= `EXE_SUB_OP;
@@ -204,7 +203,6 @@ module control(
             case(funct3)
                 `FUNCT3_ADDI : begin // sub == add negative value
                     aluOp <=`EXE_ADD_OP;
-                    $display ("addi instruction");
                 end
                 `FUNCT3_SLTI : begin
                     aluOp <= `EXE_SLT_OP;
