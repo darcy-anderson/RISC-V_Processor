@@ -86,10 +86,6 @@ wire cs_exe_r1_sel;
 wire cs_exe_r2_sel;
 
 // -- MEMORY --
-wire cs_mem_en;
-wire cs_mem_we;
-wire cs_mem_se;
-wire [1:0] cs_mem_bs;
 wire [31:0] mem_data_in;
 wire [31:0] mem_data_out;
 wire [31:0] mem_addr;
