@@ -154,6 +154,7 @@ assign exe_r2 = id_instr[24:20];
 
 // -- EXECUTE --
 register_file rf(.clk(clk),
+                 .rst(rst),
                  .rd(exe_rd),
                  .r1(exe_r1),
                  .r2(exe_r2),

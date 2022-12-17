@@ -33,15 +33,54 @@ if (register_file.registers[1] != 32'd123) begin
 end
 $display("lw/sw working");
 
-#400;
-// testing lw/sw, X3 should be 123
-//addi x7, x0, 532
+
+#300;
+// testing lw/sw, X3 should be 532 (1000010100)
+//addi x7, x0, 532 
 //sh x7, 0(x9)
 //lh x3, 0(x9)
 if (register_file.registers[3] != 32'd532) begin
     $display("something wrong with lh/sh");
     $stop;
 end
-$display("lh/sh working");
+
+// testing lb/lh/lbu/sb, x4 should be -1
+// x28 should be 1011111111
+// x29 should be 0xff
+// x30 should be 0xffff
+//addi x11, x0, -1 
+//sb x11, 0(x9)
+//lb x4, 0(x9)
+//lh x28, 0(x9)
+//lbu x29, 0(x9)
+//sw x11, 0(x9)
+//lhu x30, 0(x9)
+#700;
+if (register_file.registers[4] != 32'hffffffff) begin
+    $display("something wrong with lb/sb");
+    $stop;
 end
+if (register_file.registers[28] != 32'b1011111111) begin
+    $display("something wrong with lh/sb");
+    $stop;
+end
+if (register_file.registers[29] != 32'hff) begin
+    $display("something wrong with lbu/sb");
+    $stop;
+end
+if (register_file.registers[30] != 32'hffff) begin
+    $display("something wrong with lhu/sb");
+    $stop;
+end
+$display("lb/lh/lbu/lhu/sb working");
+$display("All Load and Store working");
+
+#10;
+
+reset_t = 1;
+#100;
+
+end
+
+
 endmodule
