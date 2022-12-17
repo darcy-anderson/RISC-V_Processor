@@ -1,5 +1,3 @@
-// TODO: Implement read/write for identity and I/O registers. Update constraints
-// file to reflect I/O registers.
 
 `timescale 1ns / 1ps
 
@@ -142,4 +140,3 @@ module data_mem(
   assign led_out = reg_led[15:0];
 
 endmodule
-

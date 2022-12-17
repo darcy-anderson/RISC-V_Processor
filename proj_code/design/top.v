@@ -1,23 +1,5 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 11/28/2022 06:10:08 PM
-// Design Name: 
-// Module Name: top
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
 
 module top(
@@ -25,8 +7,10 @@ module top(
     );
 
 reg clk, reset;
+reg [15:0] switch_t;
+wire [15:0] led_t;
 
-cpu processor(.clk(clk), .rst(reset));
+cpu cpu(.clk(clk), .rst(reset), .sw(switch_t), .led(led_t));
 
 initial begin 
 clk=0;
@@ -35,6 +19,8 @@ end
 
 initial begin
 reset=1;
+//switch = 15'd0;
+//led = 15'd0;
 #100;
 reset=0;
 end

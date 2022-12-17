@@ -11,6 +11,8 @@
 `define OP_STORE    7'b0100011
 `define OP_ALU_IMM  7'b0010011
 `define OP_ALU      7'b0110011
+`define OP_FENCE    7'b0001111
+`define OP_ECALL_EBREAK 7'b1110011
 
 ////================== Instruction funct3 in RISC-V ================== 
 // JALR
@@ -84,37 +86,26 @@
 //
 ////================== AluOp ==================
 
-`define EXE_NOP_OP 0
-`define EXE_AND_OP 1
-`define EXE_OR_OP  2
-`define EXE_XOR_OP 3
+`define EXE_ADD_OP 4'b0000
+`define EXE_SUB_OP 4'b0001
+`define EXE_SLL_OP 4'b0010
+`define EXE_SLT_OP 4'b0011
+`define EXE_SLTU_OP 4'b0100
+`define EXE_XOR_OP 4'b0101
+`define EXE_SRL_OP 4'b0110
+`define EXE_SRA_OP 4'b0111
+`define EXE_OR_OP 4'b01000
+`define EXE_AND_OP 4'b01001
 
-`define EXE_SLL_OP 5
-`define EXE_SRL_OP 6
-`define EXE_SRA_OP 7
 
-`define EXE_ADD_OP  8
-`define EXE_SLT_OP  9
-`define EXE_SLTU_OP 10
-`define EXE_SUB_OP  11
+////================== BcOp ==================
+`define EXE_BEQ_OP  3'b000
+`define EXE_BNE_OP  3'b001
+`define EXE_BLT_OP  3'b010
+`define EXE_BGE_OP  3'b011
+`define EXE_BLTU_OP 3'b100
+`define EXE_BGEU_OP 3'b101
 
-`define EXE_JAL_OP  12
-`define EXE_JALR_OP 13
-`define EXE_BEQ_OP  14
-`define EXE_BNE_OP  15
-`define EXE_BLT_OP  16
-`define EXE_BGE_OP  17
-`define EXE_BLTU_OP 18
-`define EXE_BGEU_OP 19
-
-`define EXE_LB_OP  20
-`define EXE_LH_OP  21
-`define EXE_LW_OP  22
-`define EXE_LBU_OP 23
-`define EXE_LHU_OP 24
-`define EXE_SB_OP  25
-`define EXE_SH_OP  26
-`define EXE_SW_OP  27
 //
 ////==================  Hardware Properties ================== 
 //
