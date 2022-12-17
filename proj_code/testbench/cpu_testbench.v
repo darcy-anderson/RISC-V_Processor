@@ -5,6 +5,8 @@ module cpu_testbench();
 reg clk_t, reset_t;
 reg [15:0] switch_t;
 wire [15:0] led_t;
+integer fp, r;
+reg f_out;
 
 cpu cpu(.clk(clk_t), .rst(reset_t), .sw(switch_t), .led(led_t));
 
@@ -195,7 +197,29 @@ end
 
 $display("FENCE, EBREAK working");
 
+// Test arithmetic
+reset_t = 1;
+$readmemh("arith_test.mem", cpu.im.instr_rom);
 
+#100;
+reset_t = 0;
+
+fp = $fopen("tc_arith.csv", "r");
+if (fp == 0) begin
+    $display("Error opening file.");
+    $stop;
+end
+
+while (!$feof(fp)) begin
+    r = $fscanf(fp, "%h", f_out);
+    #100
+    if ((register_file.registers[12] != f_out)) begin
+        $display("something wrong with arithmetic");
+        $stop;
+    end
+end
+ 
+$fclose(fp);
 
 $display("EVERY INDIVIDUAL INSTRUCTION WORKING!!!!");
 $stop;
