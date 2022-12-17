@@ -8,7 +8,7 @@
 reset_handler:
 main:
     // some memory location saved at x8, saving rom key
-    add     s0,sp,r0
+    add     s0,sp,zero
     li      a5, 0x46F8E8C5 // first rom key, after two zeros
     sw      a5, -148(s0)
     li      a5, 0x460C6085
@@ -83,7 +83,13 @@ main:
 
     lw      a4,-32(s0) // ab_xor
     lw      a5,-20(s0) // b_reg
-    sll     a5,a4,a5
+    sll     a3,a4,a5   // shift left logical by b_reg amount, stored at a3
+    addi    a2,zero,32 // a2 = 32
+    andi    a5,a5,0x1F // keep last 5 bits
+    sub     a5,a5,a2   // a5 = 32 - a5
+    srl     a5,a4,a5   // a5 = a4 >> a5
+    add     a5,a5,a3   // a5 = a5 + a3
+    
     sw      a5,-36(s0)
     lw      a5,-24(s0) // i _cnt
     slli    a5,a5,1    // i_cnt * 2
@@ -98,9 +104,14 @@ main:
     lw      a5,-40(s0)
     xor     a5,a4,a5
     sw      a5,-48(s0)
-    lw      a5,-48(s0)
-    lw      a3,-40(s0)
-    sll     a3,a5,a3
+    lw      a5,-48(s0) // ba_xor
+    lw      a3,-40(s0) // a
+    sll     a1,a5,a3   // shift left logical by a amount, stored at a1
+    addi    a2,zero,32 // a2 = 32
+    andi    a3,a3,0x1F // keep last 5 bits of a
+    sub     a3,a3,a2   // a3 = 32 - a3
+    srl     a3,a4,a3   // a3 = a4 >> a3
+    add     a3,a3,a1   // a3 = a3 + a1
     sw      a3,-52(s0)
     lw      a5,-24(s0)
     slli    a5,a5,1
