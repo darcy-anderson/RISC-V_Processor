@@ -48,7 +48,6 @@ module control(
         end
         
         `OP_JAL: begin
-            $display("JAL instruction");
             branchEn <= 1'b1; // do arithmetic on pc  
             immExtCtrl <= 3'b100; // J-type immediate extension
             regWriteEn <= 1'b1; // write to rd

@@ -94,7 +94,6 @@ always @(posedge clk) begin
         if (w_en == 1) begin
             if (rd != 0)
                 registers[rd] <= write_data;
-            $display("writing to register %h value %h", rd, write_data); 
         end
         if (r_en == 1) begin
             if (r1 != 0)

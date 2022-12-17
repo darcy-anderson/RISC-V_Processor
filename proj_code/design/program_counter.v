@@ -16,7 +16,6 @@ always @(posedge clk)
 begin
     if (en) begin
         i_out <= c_in;
-        $display("The new PC address is %h", i_out); 
     end
     else if (rst) begin
         i_out <= 32'h01000000;

@@ -15,6 +15,8 @@ end
     
 initial begin : testing
 reset_t=1;
+
+// Test Loand and Store
 $readmemh("LS_test_mem.mem", cpu.im.instr_rom);
 
 #100;
@@ -77,8 +79,126 @@ $display("All Load and Store working");
 
 #10;
 
+
+// Test Branch and Jump
+//addi x1, x0, 1
+//addi x2, x0, 1
+//addi x3, x0, 2
+//beq x1, x2, 8
+//garbage
+//bne x1, x3, 8
+//garbage
+//blt x1, x3, 8
+//garbage,
+//bge x3, x1, 8
+//garbage,
+//bltu x1, x3, 8
+//garbage,
+//bgeu x3, x1, 8
+//garbage
+//jal x4, 8
+//garbage
+//jalr x5, x1, 8
+
+
 reset_t = 1;
+$readmemh("Branch_test_mem.mem", cpu.im.instr_rom);
+
 #100;
+reset_t =0;
+#500; //wait for writing to complete
+if (cpu.pc.i_out != 32'h01000014) begin
+    $display("something wrong with beq");
+    $stop;
+end
+#100
+if (cpu.pc.i_out != 32'h0100001c) begin
+    $display("something wrong with bne");
+    $stop;
+end
+#100
+if (cpu.pc.i_out != 32'h01000024) begin
+    $display("something wrong with blt");
+    $stop;
+end
+#100
+if (cpu.pc.i_out != 32'h0100002c) begin
+    $display("something wrong with bge");
+    $stop;
+end
+#100
+if (cpu.pc.i_out != 32'h01000034) begin
+    $display("something wrong with bltu");
+    $stop;
+end
+#100
+if (cpu.pc.i_out != 32'h0100003c) begin
+    $display("something wrong with bgeu");
+    $stop;
+end
+#100
+if ( (cpu.pc.i_out != 32'h01000044) || (register_file.registers[4] != 32'h01000040)) begin
+    $display("something wrong with jal");
+    $stop;
+end
+#100
+if ( (cpu.pc.i_out != 32'h9) || (register_file.registers[5] != 32'h01000048)) begin
+    $display("something wrong with jalr");
+    $stop;
+end
+#100
+$display("All Branch and Jump working");
+
+
+// Test LUI, AUIPC, ECALL
+//lui x9, -524288
+//auipc x8, -524288
+//ecall
+
+reset_t = 1;
+$readmemh("U_Ecall_test_mem.mem", cpu.im.instr_rom);
+
+#100;
+reset_t =0;
+#200; //wait for writing to complete
+if ((register_file.registers[9] != 32'h80000000)) begin
+    $display("something wrong with lui");
+    $stop;
+end
+#100;
+if ((register_file.registers[8] != 32'h81000004)) begin
+    $display("something wrong with auipc");
+    $stop;
+end
+#100;
+if ((cpu.state_curr != 3'b111)) begin
+    $display("something wrong with ecall");
+    $stop;
+end
+
+$display("LUI, AUIPC, ECALL working");
+
+
+// Test fence, ebreak
+// fence
+// ebreak
+reset_t = 1;
+$readmemh("fence_ebreak_test_mem.mem", cpu.im.instr_rom);
+
+#100;
+reset_t =0;
+#200;
+if ((cpu.state_curr != 3'b111)) begin
+    $display("something wrong with ebreak");
+    $stop;
+end
+
+$display("FENCE, EBREAK working");
+
+
+
+$display("EVERY INDIVIDUAL INSTRUCTION WORKING!!!!");
+$stop;
 
 end
 
