@@ -29,6 +29,7 @@ b_lessthan_a:
 end:
     li a2, 0x00100014           # Get address for LED register
     sh a0, 0(a2)                # Store 16-bit LED values
+    j reset_handler
 
     
 

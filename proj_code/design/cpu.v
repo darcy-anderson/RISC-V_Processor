@@ -3,12 +3,22 @@
 
 
 module cpu(
-    input wire clk,
+    input wire system_clk,
     input wire rst,
     input wire [15:0] sw,
     output wire [15:0] led
     );
     
+wire divided_clk;
+wire clk;
+wire locked;
+clk_wiz_0 clk_divider(
+		.clk_out1(divided_clk), 
+		.locked(locked),
+		.clk_in1(system_clk)
+		);
+assign clk = divided_clk && locked;
+
 // >> State Machine <<
 localparam [2:0]
     halt    = 3'b111,

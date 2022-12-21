@@ -13,7 +13,7 @@ SYMBOL TABLE:
 01000028 l       .text	00000000 b_lessthan_a
 01000020 l       .text	00000000 a_lessthan_b
 01000000 g     F .text	00000000 reset_handler
-0100003c g       .text	00000000 _sidata
+01000040 g       .text	00000000 _sidata
 80000000 g       .bss	00000000 _sbss
 00000400 g       *ABS*	00000000 __stack_size
 80000000 g       .data	00000000 _sdata
@@ -48,3 +48,4 @@ Disassembly of section .text:
  1000030:	00100637          	lui	a2,0x100
  1000034:	01460613          	addi	a2,a2,20 # 100014 <__stack_size+0xffc14>
  1000038:	00a61023          	sh	a0,0(a2)
+ 100003c:	fc5ff06f          	j	1000000 <reset_handler>
